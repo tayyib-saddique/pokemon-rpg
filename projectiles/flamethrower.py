@@ -152,8 +152,8 @@ class Flamethrower(BaseProjectile):
     PARTICLES_PER_BURST = 3
     SPARK_CHANCE        = 0.50
 
-    def __init__(self, origin_x, origin_y, facing, duration=1.2):
-        super().__init__(origin_x, origin_y, facing, speed=360)
+    def __init__(self, origin_x, origin_y, facing, duration=1.2, **kwargs):
+        super().__init__(origin_x, origin_y, facing, speed=360, **kwargs)
 
         self._dir   = math.atan2(self.velocity.y, self.velocity.x)
         self._speed = self.velocity.length()
@@ -169,13 +169,22 @@ class Flamethrower(BaseProjectile):
         self.sparks:    list[EdgeSpark]   = []
         self._flash:    list[NozzleFlash] = [NozzleFlash(self._nx, self._ny)]
 
+        self.rect = pygame.Rect(0, 0, 20, 20)
+        self.rect.center = (self._nx, self._ny)
+
     def _burst(self):
         for _ in range(self.PARTICLES_PER_BURST):
             self.particles.append(JetParticle(self._nx, self._ny, self._dir, self._speed))
         if random.random() < self.SPARK_CHANCE:
             self.sparks.append(EdgeSpark(self._nx, self._ny, self._dir, self._speed))
 
-    def update(self, dt):
+    def update(self, dt, *args, **kwargs):
+        if hasattr(self, 'rect'):
+            for sprite in self.collision_sprites:
+                if self.rect.colliderect(sprite.rect):
+                    self.active = False
+                    return
+
         self._timer += dt
 
         if self._emit_t < self._duration:

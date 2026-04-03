@@ -79,13 +79,16 @@ class BubbleBeam(BaseProjectile):
     HEAD_RADII = [9, 6, 4]
     HEAD_OFFSETS = [(0, 0), (-5, 5), (6, -5)]
 
-    def __init__(self, origin_x, origin_y, facing):
-        super().__init__(origin_x, origin_y, facing, speed = 340)
-
+    def __init__(self, origin_x, origin_y, facing, **kwargs):
+        super().__init__(origin_x, origin_y, facing, speed = 340, **kwargs)
+        
         self.trail = []
         self._trail_timer = 0
         self._wobble = 0.0
         self._irid_cycle = 0
+
+        self.rect = pygame.Rect(0, 0, 18, 18)
+        self.rect.center = self.pos
 
     def _spawn_trail(self):
         self._irid_cycle = (self._irid_cycle + 1) % len(B_IRID)
@@ -99,8 +102,9 @@ class BubbleBeam(BaseProjectile):
         ))
 
 
-    def update(self, dt):
+    def update(self, dt, *args, **kwargs):
         super().update(dt)
+        self.rect.center = self.pos
 
         self._trail_timer += dt
         self._wobble += 2.5 * dt
