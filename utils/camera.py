@@ -19,30 +19,29 @@ class CameraGroup(pygame.sprite.Group):
             self._blit(sprite)
 
         depth_sprites.append(player)
-        depth_sprites.sort(key=lambda s: getattr(s, 'ground_y', s.rect.bottom))
+        depth_sprites.sort(key=lambda s: getattr(s, "ground_y", s.rect.bottom))
 
         for sprite in depth_sprites:
             self._blit(sprite)
 
-
     def _update_offset(self, player):
         """Centre the camera on the player."""
-        self.offset.x = player.rect.centerx - self.display_surface.get_width()  // 2
+        self.offset.x = player.rect.centerx - self.display_surface.get_width() // 2
         self.offset.y = player.rect.centery - self.display_surface.get_height() // 2
 
     def _bucket_sprites(self, player):
         """Split sprites into floor, shadow, and depth buckets."""
-        floor_sprites  = []
+        floor_sprites = []
         shadow_sprites = []
-        depth_sprites  = []
+        depth_sprites = []
 
         for sprite in self.sprites():
             if sprite is player:
                 continue
-            layer = getattr(sprite, 'layer_name', '')
-            if 'Floor' in layer or 'Terrain' in layer:
+            layer = getattr(sprite, "layer_name", "")
+            if "Floor" in layer or "Terrain" in layer:
                 floor_sprites.append(sprite)
-            elif 'Shadow' in layer:
+            elif "Shadow" in layer:
                 shadow_sprites.append(sprite)
             else:
                 depth_sprites.append(sprite)
@@ -50,7 +49,7 @@ class CameraGroup(pygame.sprite.Group):
         return floor_sprites, shadow_sprites, depth_sprites
 
     def _blit(self, sprite):
-        if hasattr(sprite, 'draw'):
+        if hasattr(sprite, "draw"):
             sprite.draw(self.display_surface, self.offset)
         else:
             self.display_surface.blit(sprite.image, sprite.rect.topleft - self.offset)
