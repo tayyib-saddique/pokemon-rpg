@@ -5,79 +5,105 @@ from utils.support import *
 from constants.moves import POKEMON_MOVES
 from constants.sprite_sheets import SPRITE_SHEETS
 
-class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, create_projectile_callback, 
-                pokemon = 'totodile', map_size=(1440, 1440), collision_sprites = None):
-        super().__init__(group)
-        self.pokemon = pokemon
 
+class Player(pygame.sprite.Sprite):
+    def __init__(self, pos, group, create_projectile_callback,
+                 pokemon, map_size=(1440, 1440), collision_sprites=None):
+        super().__init__(group)
+
+        # --- Core ---
+        self.pokemon = pokemon
+        self.create_projectile_callback = create_projectile_callback
+
+        # --- State ---
         self.attacking = False
         self.shooting = False
         self.attack_complete = False
 
-        # animation setup
+        # --- Animation ---
+        self.animations = {}
         self.import_assets()
         self.status = 'down_walk'
         self.frame_index = 0
 
-        # general set up
-        self.image = self.animations[self.status][self.frame_index]
+        self.image = self.animations[self.status][0]
         self.rect = self.image.get_rect(center=pos)
         self.hitbox = self.rect.inflate(-self.rect.width // 2, -self.rect.height // 2)
 
-        # movement attributes
+        # --- Movement ---
         self.direction = pygame.math.Vector2()
         self.pos = pygame.math.Vector2(self.rect.center)
         self.speed = 200
 
-        # moves
-        self.create_projectile_callback = create_projectile_callback
+        # --- Moves ---
         moves = POKEMON_MOVES.get(pokemon, {})
         shoot_data = moves.get('shoot', [])
-        if isinstance(shoot_data, str):
-            self.shoot_moves = [shoot_data]
-        else:
-            self.shoot_moves = list(shoot_data)
+        self.shoot_moves = [shoot_data] if isinstance(shoot_data, str) else list(shoot_data)
 
-        self.shoot_index = 0      
+        self.shoot_index = 0
         self.strike_move = moves.get('strike')
 
-        # map
+        # --- Map ---
         self.map_width, self.map_height = map_size
         self.collision_sprites = collision_sprites or []
 
+    # --------------------------------------------------
+    # ASSETS
+    # --------------------------------------------------
     def import_assets(self):
-        self.animations = {}
         scale = 3
-
         pokemon_data = SPRITE_SHEETS.get(self.pokemon, {})
-
         actions = ['walk', 'idle', 'shoot', 'strike']
 
         for action in actions:
             data = pokemon_data.get(action)
-            sheet_path = f'graphics/pokemon/{self.pokemon}/{action}.png'
-            
-            if not os.path.exists(sheet_path):
+            path = f'graphics/pokemon/{self.pokemon}/{action}.png'
+
+            if not data or not os.path.exists(path):
                 continue
-            
-            sheet = pygame.image.load(sheet_path).convert_alpha()
-            
-            frame_w = sheet.get_width() // data['cols'] # variable column count per action
+
+            sheet = pygame.image.load(path).convert_alpha()
+            frame_w = sheet.get_width() // data['cols']
             frame_h = sheet.get_height() // 8
-            
-            frames_by_direction = load_pmd_sheet(sheet_path, frame_w=frame_w, frame_h=frame_h)
-            
-            for direction, frames in frames_by_direction.items():
-                scaled = [pygame.transform.scale(f, (int(frame_w * scale), int(frame_h * scale))) for f in frames]
+
+            frames = load_pmd_sheet(path, frame_w, frame_h)
+
+            for direction, imgs in frames.items():
+                scaled = [pygame.transform.scale(img, (frame_w * scale, frame_h * scale)) for img in imgs]
+
                 if 'trim' in data:
-                    indices = data['trim']
-                    scaled = [f for i, f in enumerate(scaled) if i in indices]
-                    
+                    scaled = [f for i, f in enumerate(scaled) if i in data['trim']]
+
                 self.animations[f'{direction}_{action}'] = scaled
 
+    # --------------------------------------------------
+    # INPUT / EVENTS
+    # --------------------------------------------------
+    def input(self):
+        keys = pygame.key.get_pressed()
+        self.direction.x = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
+        self.direction.y = keys[pygame.K_DOWN] - keys[pygame.K_UP]
+
+    def handle_events(self, events):
+        for event in events:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_z and not (self.attacking or self.shooting):
+                    self.attacking = True
+                    self.attack_complete = False
+
+                elif event.key == pygame.K_x and not (self.attacking or self.shooting):
+                    self.shooting = True
+                    self.attack_complete = False
+
+                elif event.key == pygame.K_q and self.shoot_moves:
+                    self.shoot_index = (self.shoot_index + 1) % len(self.shoot_moves)
+                    print(f"Switched to: {self.shoot_moves[self.shoot_index]}")
+
+    # --------------------------------------------------
+    # STATE / STATUS
+    # --------------------------------------------------
     def get_status(self):
-        facing = self.status.rsplit('_', 1)[0]
+        facing = self.get_facing()
 
         if ('_shoot' in self.status or '_strike' in self.status) and not self.attack_complete:
             return
@@ -85,171 +111,150 @@ class Player(pygame.sprite.Sprite):
         self.attack_complete = False
 
         if self.attacking:
-            new_status = f'{facing}_strike'
-            if new_status in self.animations:
-                self.status = new_status
-                self.frame_index = 0
-                return
-            else:
-                self.attacking = False
+            self.set_action(facing, 'strike')
+            return
 
         if self.shooting:
-            new_status = f'{facing}_shoot'
-            if new_status in self.animations:
-                self.status = new_status
-                self.frame_index = 0
-                return
-            else:
-                self.shooting = False
-        
-        if self.direction.magnitude() == 0:
-            idle_status = f'{facing}_idle'
-            self.status = idle_status if idle_status in self.animations else f'{facing}_walk'
+            self.set_action(facing, 'shoot')
+            return
 
-        # update status based on direction
+        if self.direction.length() == 0:
+            self.status = f'{facing}_idle' if f'{facing}_idle' in self.animations else f'{facing}_walk'
         else:
-            if self.direction.x < 0 and self.direction.y > 0:
-                    self.status = 'down_right_walk'
-            elif self.direction.x < 0 and self.direction.y < 0:
-                self.status = 'up_right_walk'
-            elif self.direction.x > 0 and self.direction.y > 0:
-                self.status = 'down_left_walk'
-            elif self.direction.x > 0 and self.direction.y < 0:
-                self.status = 'up_left_walk'
-            elif self.direction.y > 0:
-                self.status = 'down_walk'
-            elif self.direction.y < 0:
-                self.status = 'up_walk'
-            elif self.direction.x < 0:
-                self.status = 'right_walk'
-            elif self.direction.x > 0:
-                self.status = 'left_walk'
+            self.status = f'{self.get_direction_name()}_walk'
 
-    def input(self):
-        keys = pygame.key.get_pressed()
-        
-        self.direction.y = -1 if keys[pygame.K_UP] else (1 if keys[pygame.K_DOWN] else 0)
-        self.direction.x = -1 if keys[pygame.K_LEFT] else (1 if keys[pygame.K_RIGHT] else 0)
+    def set_action(self, facing, action):
+        new_status = f'{facing}_{action}'
+        if new_status in self.animations:
+            self.status = new_status
+            self.frame_index = 0
+        else:
+            setattr(self, action + 'ing', False)
 
-    def handle_events(self, events):
-        for event in events:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_z and not self.attacking and not self.shooting:
-                    self.attacking = True
-                    self.attack_complete = False
-                if event.key == pygame.K_x and not self.attacking and not self.shooting:
-                    self.shooting = True
-                    self.attack_complete = False
-                if event.key == pygame.K_q and self.shoot_moves:
-                    if len(self.shoot_moves) > 0:
-                        self.shoot_index = (self.shoot_index + 1) % len(self.shoot_moves)
-                        print(f"Switched to: {self.shoot_moves[self.shoot_index]}")
-    
-    def trigger_projectile(self, move_type):
-        if '_shoot' in self.status and self.shoot_moves:
-            current_move = self.shoot_moves[self.shoot_index]
-            facing = self.get_facing()
-            self.create_projectile_callback(self.rect.center, facing, current_move)
-        
-        # elif '_strike' in self.status:
-        #     facing = self.get_facing()
-        #     self.create_projectile_callback(self.rect.center, facing, self.strike_move)
-        
-    def switch_move(self):
-        """Cycle through available shoot moves."""
-        if len(self.shoot_moves) > 1:
-            self.shoot_index = (self.shoot_index + 1) % len(self.shoot_moves)
-            print('Switched to move:', self.shoot_moves[self.shoot_index])
+    def get_direction_name(self):
+        dx, dy = self.direction.x, self.direction.y
 
+        if dx < 0 and dy > 0: return 'down_right'
+        if dx < 0 and dy < 0: return 'up_right'
+        if dx > 0 and dy > 0: return 'down_left'
+        if dx > 0 and dy < 0: return 'up_left'
+        if dy > 0: return 'down'
+        if dy < 0: return 'up'
+        if dx < 0: return 'right'
+        if dx > 0: return 'left'
+
+        return self.get_facing()
+
+    def get_facing(self):
+        return self.status.rsplit('_', 1)[0]
+
+    # --------------------------------------------------
+    # PROJECTILES
+    # --------------------------------------------------
+    def get_mouth_position(self):
+        x, y = self.rect.center
+
+        offsets = {
+            'up': (0, -20), 'down': (0, 20),
+            'left': (-20, 0), 'right': (20, 0),
+            'up_left': (-20, -20), 'up_right': (20, -20),
+            'down_left': (-20, 20), 'down_right': (20, 20),
+        }
+
+        ox, oy = offsets.get(self.get_facing(), (0, 0))
+        return x + ox, y + oy
+
+    def trigger_projectile(self):
+        if not self.shoot_moves:
+            return
+
+        move = self.shoot_moves[self.shoot_index]
+        self.create_projectile_callback(
+            self.get_mouth_position(),
+            self.get_facing(),
+            move
+        )
+
+    # --------------------------------------------------
+    # ANIMATION
+    # --------------------------------------------------
     def animate(self, dt):
         if self.status not in self.animations:
-            facing = self.get_facing()
-            self.status = f'{facing}_walk' 
+            self.status = f'{self.get_facing()}_walk'
 
-        if '_strike' in self.status:
-            speed = 20
-        elif '_shoot' in self.status:
-            speed = 20
-        else: 
-            speed = 8
-        
-        old_frame = int(self.frame_index)
-        self.frame_index += speed * dt 
-        next_frame = int(self.frame_index)
-        trigger_frame = len(self.animations[self.status]) // 2 # Fire at the midpoint
+        speed = 20 if ('_shoot' in self.status or '_strike' in self.status) else 8
 
-        if old_frame < trigger_frame <= next_frame:
-            if '_shoot' in self.status:
-                self.trigger_projectile(self.shoot_moves[self.shoot_index])
-            # elif '_strike' in self.status:
-            #     self.trigger_projectile(self.strike_move)
+        old = int(self.frame_index)
+        self.frame_index += speed * dt
+        new = int(self.frame_index)
 
-        if next_frame >= len(self.animations[self.status]):
+        trigger = len(self.animations[self.status]) // 2
+
+        if old < trigger <= new and '_shoot' in self.status:
+            self.trigger_projectile()
+
+        if new >= len(self.animations[self.status]):
             self.frame_index = 0
-            if '_strike' in self.status or '_shoot' in self.status:
+            if '_shoot' in self.status or '_strike' in self.status:
+                self.attacking = self.shooting = False
                 self.attack_complete = True
-                self.attacking = False
-                self.shooting = False
-        
-        self.image = self.animations[self.status][int(self.frame_index)]
 
+        self.image = self.animations[self.status][int(self.frame_index)]
         self.rect = self.image.get_rect(center=self.hitbox.center)
 
-        # dynamic clamping 
-        map_rect = pygame.Rect(0, 0, self.map_width, self.map_height)
-        if not map_rect.contains(self.rect):
-            self.rect.clamp_ip(map_rect)
-            self.pos.x = float(self.rect.centerx)
-            self.pos.y = float(self.rect.centery)
-            self.hitbox.center = self.rect.center
+        self.clamp_to_map()
 
+    # --------------------------------------------------
+    # MOVEMENT
+    # --------------------------------------------------
     def move(self, dt):
-        # normalising vectors
-        if self.direction.magnitude() > 0:
+        if self.direction.length() > 0:
             self.direction = self.direction.normalize()
-                
-        # horizontal movement
+
         self.pos.x += self.direction.x * self.speed * dt
-        self.rect.centerx = self.pos.x
         self.hitbox.centerx = round(self.pos.x)
         self._collide('horizontal')
 
-        # vertical movement
         self.pos.y += self.direction.y * self.speed * dt
-        self.rect.centery = self.pos.y
         self.hitbox.centery = round(self.pos.y)
         self._collide('vertical')
 
         self.rect.center = self.hitbox.center
 
-    def get_facing(self):
-            """
-            Returns the current facing direction as a plain string, e.g.:
-            'down', 'up', 'left', 'right',
-            'down_right', 'down_left', 'up_right', 'up_left'
-
-            Strips the trailing action suffix (_walk / _idle / _shoot / _strike)
-            from self.status using rsplit so compound directions like
-            'down_right' are preserved intact.
-            """
-            return self.status.rsplit('_', 1)[0]
-    
     def _collide(self, direction):
         for sprite in self.collision_sprites:
             if sprite.rect.colliderect(self.hitbox):
                 if direction == 'horizontal':
-                    if self.direction.x > 0: self.hitbox.right = sprite.rect.left
-                    elif self.direction.x < 0: self.hitbox.left = sprite.rect.right
-                    self.pos.x = float(self.hitbox.centerx)
+                    if self.direction.x > 0:
+                        self.hitbox.right = sprite.rect.left
+                    elif self.direction.x < 0:
+                        self.hitbox.left = sprite.rect.right
+                    self.pos.x = self.hitbox.centerx
 
-                elif direction == 'vertical':
-                    if self.direction.y > 0: self.hitbox.bottom = sprite.rect.top
-                    elif self.direction.y < 0: self.hitbox.top = sprite.rect.bottom
-                    self.pos.y = float(self.hitbox.centery)
+                if direction == 'vertical':
+                    if self.direction.y > 0:
+                        self.hitbox.bottom = sprite.rect.top
+                    elif self.direction.y < 0:
+                        self.hitbox.top = sprite.rect.bottom
+                    self.pos.y = self.hitbox.centery
 
+    def clamp_to_map(self):
+        map_rect = pygame.Rect(0, 0, self.map_width, self.map_height)
+        if not map_rect.contains(self.rect):
+            self.rect.clamp_ip(map_rect)
+            self.pos.update(self.rect.center)
+            self.hitbox.center = self.rect.center
+
+    # --------------------------------------------------
+    # UPDATE
+    # --------------------------------------------------
     def update(self, dt, events):
         self.input()
         self.handle_events(events)
         self.get_status()
         self.move(dt)
         self.animate(dt)
+
+    @property
+    def ground_y(self):
+        return self.hitbox.bottom

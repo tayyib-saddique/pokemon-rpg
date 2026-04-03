@@ -136,8 +136,8 @@ class Ember(BaseProjectile):
         (-2,  6, 3, 3.2),
     ]
 
-    def __init__(self, origin_x, origin_y, facing):
-        super().__init__(origin_x, origin_y, facing, speed=460)
+    def __init__(self, origin_x, origin_y, facing, **kwargs):
+        super().__init__(origin_x, origin_y, facing, speed=460, **kwargs)
         self._dir   = math.atan2(self.velocity.y, self.velocity.x)
         self._speed = self.velocity.length()
 
@@ -151,6 +151,9 @@ class Ember(BaseProjectile):
         self._exploded = False
         self._age      = 0.0
 
+        self.rect = pygame.Rect(0, 0, 30, 30)
+        self.rect.center = self.pos
+
     def impact(self):
         if not self._exploded:
             self._exploded = True
@@ -159,9 +162,11 @@ class Ember(BaseProjectile):
                 self.burst.append(BurstShard(self.pos.x, self.pos.y,
                                              self._dir, i, self.BURST_COUNT))
 
-    def update(self, dt):
+    def update(self, dt, *args, **kwargs):
         if not self._exploded:
             super().update(dt)
+            self.rect.center = self.pos
+
             self._age += dt
             for hs in self.head_shards:
                 hs.update(dt)
