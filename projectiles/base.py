@@ -20,7 +20,7 @@ class BaseProjectile(pygame.sprite.Sprite):
                  speed = 300, map_size=(1440, 1440), 
                  max_range = 400, collision_sprites=None):
         
-        # 2. Initialize the Sprite parent class
+        # Initialize the Sprite parent class
         super().__init__()                     
         
         self.facing = facing
