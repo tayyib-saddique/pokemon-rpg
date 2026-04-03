@@ -22,10 +22,10 @@ import random
 from settings import WIDTH, HEIGHT, FPS
 from player import Player
 
-B_RIM       = (160, 220, 255)   # main rim colour
-B_SHINE     = (230, 248, 255)   # specular dot
-B_INNER     = ( 80, 160, 240)   # faint inner fill tint
-B_IRID = [                      # iridescent rim accent colours (cycled per bubble)
+B_RIM = (160, 220, 255)  # main rim colour
+B_SHINE = (230, 248, 255)  # specular dot
+B_INNER = (80, 160, 240)  # faint inner fill tint
+B_IRID = [  # iridescent rim accent colours (cycled per bubble)
     (180, 200, 255),
     (200, 180, 255),
     (160, 240, 220),
@@ -33,14 +33,14 @@ B_IRID = [                      # iridescent rim accent colours (cycled per bubb
 ]
 
 FACING_VELOCITY = {
-    'down':       ( 0,    1   ),
-    'up':         ( 0,   -1   ),
-    'left':       ( 1,    0   ),
-    'right':      (-1,    0   ),
-    'down_right': (-0.707,  0.707),
-    'down_left':  ( 0.707,  0.707),
-    'up_right':   (-0.707, -0.707),
-    'up_left':    ( 0.707, -0.707),
+    "down": (0, 1),
+    "up": (0, -1),
+    "left": (1, 0),
+    "right": (-1, 0),
+    "down_right": (-0.707, 0.707),
+    "down_left": (0.707, 0.707),
+    "up_right": (-0.707, -0.707),
+    "up_left": (0.707, -0.707),
 }
 
 
@@ -58,7 +58,7 @@ def draw_bubble(surface, cx, cy, r, irid_index=0, alpha_scale=1.0):
     if r < 1 or alpha_scale <= 0:
         return
 
-    bg = (18, 22, 30)   # must match screen fill colour
+    bg = (18, 22, 30)  # must match screen fill colour
 
     def blend(c, a):
         return (
@@ -85,25 +85,30 @@ def draw_bubble(surface, cx, cy, r, irid_index=0, alpha_scale=1.0):
         hr = max(1, r // 4)
         pygame.draw.circle(surface, blend(B_SHINE, 0.9 * alpha_scale), (hx, hy), hr)
         if r >= 6:
-            pygame.draw.circle(surface, blend(B_SHINE, 0.5 * alpha_scale),
-                               (hx + 2, hy + 2), max(1, hr - 1))
+            pygame.draw.circle(
+                surface,
+                blend(B_SHINE, 0.5 * alpha_scale),
+                (hx + 2, hy + 2),
+                max(1, hr - 1),
+            )
 
 
 class TrailBubble:
     """A single bubble left in the wake of the projectile."""
+
     def __init__(self, x, y, vx_base, vy_base, irid_index):
         self.x = float(x)
         self.y = float(y)
         # Drift: slight random perpendicular wobble + slow forward momentum
         perp_angle = math.atan2(vy_base, vx_base) + math.pi / 2
-        drift_mag  = random.uniform(5, 25)
-        side       = random.choice((-1, 1))
+        drift_mag = random.uniform(5, 25)
+        side = random.choice((-1, 1))
         self.vx = math.cos(perp_angle) * drift_mag * side + vx_base * 0.04
         self.vy = math.sin(perp_angle) * drift_mag * side + vy_base * 0.04
-        self.r       = random.randint(3, 7)
-        self.life    = random.uniform(0.25, 0.55)
+        self.r = random.randint(3, 7)
+        self.life = random.uniform(0.25, 0.55)
         self.max_life = self.life
-        self.irid    = irid_index
+        self.irid = irid_index
         # Gentle wobble oscillation
         self.wobble_phase = random.uniform(0, math.pi * 2)
         self.wobble_speed = random.uniform(3, 6)
@@ -125,30 +130,30 @@ class TrailBubble:
 
 
 class BubbleBeamProjectile:
-    SPEED            = 340      # bubbles travel a bit slower than a water jet
-    TRAIL_INTERVAL   = 0.04     # seconds between spawning trail bubbles
-    HEAD_RADII       = [9, 6, 4]  # cluster of 3 bubbles at the head
-    HEAD_OFFSETS     = [         # (dx, dy) offsets from centre for each head bubble
-        ( 0,  0),
-        ( 6, -5),
-        (-5,  5),
+    SPEED = 340  # bubbles travel a bit slower than a water jet
+    TRAIL_INTERVAL = 0.04  # seconds between spawning trail bubbles
+    HEAD_RADII = [9, 6, 4]  # cluster of 3 bubbles at the head
+    HEAD_OFFSETS = [  # (dx, dy) offsets from centre for each head bubble
+        (0, 0),
+        (6, -5),
+        (-5, 5),
     ]
-    FRAME_SPEED      = 2.5      # head wobble speed (radians/sec)
+    FRAME_SPEED = 2.5  # head wobble speed (radians/sec)
 
     def __init__(self, origin_x, origin_y, facing):
         self.facing = facing
-        vx, vy      = FACING_VELOCITY.get(facing, (0, 1))
-        self.vx     = vx * self.SPEED
-        self.vy     = vy * self.SPEED
+        vx, vy = FACING_VELOCITY.get(facing, (0, 1))
+        self.vx = vx * self.SPEED
+        self.vy = vy * self.SPEED
 
-        self.x      = float(origin_x)
-        self.y      = float(origin_y)
+        self.x = float(origin_x)
+        self.y = float(origin_y)
 
-        self.alive         = True
+        self.alive = True
         self.trail: list[TrailBubble] = []
-        self._trail_timer  = 0.0
-        self._irid_cycle   = 0
-        self._wobble       = 0.0   # head wobble accumulator
+        self._trail_timer = 0.0
+        self._irid_cycle = 0
+        self._wobble = 0.0  # head wobble accumulator
 
     def _spawn_trail(self):
         self._irid_cycle = (self._irid_cycle + 1) % len(B_IRID)
@@ -157,8 +162,9 @@ class BubbleBeamProjectile:
             ox = random.uniform(-4, 4)
             oy = random.uniform(-4, 4)
             self.trail.append(
-                TrailBubble(self.x + ox, self.y + oy,
-                            self.vx, self.vy, self._irid_cycle)
+                TrailBubble(
+                    self.x + ox, self.y + oy, self.vx, self.vy, self._irid_cycle
+                )
             )
 
     def update(self, dt):
@@ -175,8 +181,7 @@ class BubbleBeamProjectile:
             b.update(dt)
         self.trail = [b for b in self.trail if b.alive]
 
-        if (self.x > WIDTH + 80 or self.x < -80 or
-                self.y > HEIGHT + 80 or self.y < -80):
+        if self.x > WIDTH + 80 or self.x < -80 or self.y > HEIGHT + 80 or self.y < -80:
             self.alive = False
 
     def draw(self, surface):
@@ -186,20 +191,20 @@ class BubbleBeamProjectile:
 
         # Head cluster — 3 bubbles with a gentle wobble offset
         for i, (base_dx, base_dy) in enumerate(self.HEAD_OFFSETS):
-            r    = self.HEAD_RADII[i]
+            r = self.HEAD_RADII[i]
             # Wobble each bubble slightly independently
-            phase  = self._wobble + i * (math.pi * 2 / 3)
-            wdx    = math.cos(phase) * 1.5
-            wdy    = math.sin(phase) * 1.5
-            cx     = int(self.x + base_dx + wdx)
-            cy     = int(self.y + base_dy + wdy)
-            irid   = (self._irid_cycle + i) % len(B_IRID)
+            phase = self._wobble + i * (math.pi * 2 / 3)
+            wdx = math.cos(phase) * 1.5
+            wdy = math.sin(phase) * 1.5
+            cx = int(self.x + base_dx + wdx)
+            cy = int(self.y + base_dy + wdy)
+            irid = (self._irid_cycle + i) % len(B_IRID)
             draw_bubble(surface, cx, cy, r, irid, 1.0)
 
 
 class HUD:
     def __init__(self):
-        self.font_small  = pygame.font.SysFont(None, 22)
+        self.font_small = pygame.font.SysFont(None, 22)
         self.total_fired = 0
         self._fps_samples: list = []
 
@@ -227,7 +232,7 @@ class HUD:
         pad = 10
         for i, line in enumerate(lines):
             color = (255, 220, 80) if i == 0 else (200, 200, 200)
-            surf  = self.font_small.render(line, True, color)
+            surf = self.font_small.render(line, True, color)
             surface.blit(surf, (pad, pad + i * 20))
 
 
@@ -235,20 +240,22 @@ def run():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Totodile - Bubble Beam Stress Test")
-    clock  = pygame.time.Clock()
+    clock = pygame.time.Clock()
 
     all_sprites = pygame.sprite.Group()
-    player = Player((WIDTH//2, HEIGHT//2), all_sprites, lambda *args: None, pokemon='totodile')
+    player = Player(
+        (WIDTH // 2, HEIGHT // 2), all_sprites, lambda *args: None, pokemon="totodile"
+    )
 
     projectiles: list[BubbleBeamProjectile] = []
     hud = HUD()
 
     RAPID_FIRE_INTERVAL = 120
-    last_fire_time      = 0
+    last_fire_time = 0
 
     running = True
     while running:
-        dt          = clock.tick(FPS) / 1000.0
+        dt = clock.tick(FPS) / 1000.0
         current_fps = clock.get_fps()
         hud.update_fps(current_fps)
 
@@ -260,7 +267,7 @@ def run():
                 running = False
 
         keys = pygame.key.get_pressed()
-        now  = pygame.time.get_ticks()
+        now = pygame.time.get_ticks()
         if keys[pygame.K_z]:
             if now - last_fire_time >= RAPID_FIRE_INTERVAL:
                 facing = player.get_facing()
@@ -309,5 +316,5 @@ def run():
     pygame.quit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()
