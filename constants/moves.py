@@ -18,8 +18,3 @@ POKEMON_MOVES = {
         'strike': 'slash'
         },
 }
-
-SPAWN_OFFSETS = {
-    'charmander': {'right': (-3, -15), 'left': (3, -15), 'up': (0, -10), 'down': (0, 5)},
-    'totodile':   {'right': (8,  -3), 'left': (-8,  -3), 'up': (0, -8),  'down': (0, 3)},
-}
