@@ -5,6 +5,7 @@ from utils.animator import Animator
 from utils.direction import direction_name
 from utils.health import Health
 
+
 class Player(pygame.sprite.Sprite):
     def __init__(
         self,
