@@ -50,7 +50,9 @@ The Pokémon sprites used in this project are sourced from the [PMD Sprite Repos
 - **Credits:** Sprites provided by the PMD Sprite Repository community. Individual artist credits are maintained within the asset folders
 
 ### Tilesets
-This project uses the following assets which are not included in this repo due to licensing. [Asset Alliance](https://itch.io/b/3513/all-in-1-mega-bundle-update-4)
+This project uses the following assets which are not included in this repo due to licensing 
+- [Asset Alliance](https://itch.io/b/3513/all-in-1-mega-bundle-update-4)
+  
 To run the game, please place the purchased assets in the `/graphics/floormaps/tilesets/` directory.
 
 ### License
