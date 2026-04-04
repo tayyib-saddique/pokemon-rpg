@@ -1,6 +1,6 @@
 # Pokémon RPG game
 
-Python-based Pokémon RPG game built with Pygame, inspired by the mechanics of Pokémon Mystery Dungeon and the atmospheric exploration of Stardew Valley. 
+Python-based Pokémon RPG game built with Pygame, inspired by the mechanics of Pokémon Mystery Dungeon and the exploration of Stardew Valley. 
 
 ## Features:
 - Real-time movement and collision system using Pygame
@@ -62,4 +62,5 @@ This project is for educational purposes. Pokémon and all related properties ar
 Elements of the projectile system were developed with AI assistance focusing on:
 - Vector-based trajectory calculations
 - Collision optimisation
+  
 All AI-assisted code was carefully reviewed, tested, and refactored to ensure performance, accuracy, and maintainability.
