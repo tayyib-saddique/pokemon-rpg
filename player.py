@@ -3,7 +3,7 @@ from constants.moves import POKEMON_MOVES
 from utils.assets import load_pokemon_animations
 from utils.animator import Animator
 from utils.direction import direction_name
-
+from utils.health import Health
 
 class Player(pygame.sprite.Sprite):
     def __init__(
@@ -52,6 +52,9 @@ class Player(pygame.sprite.Sprite):
         #  Map
         self.map_width, self.map_height = map_size
         self.collision_sprites = collision_sprites or []
+
+        # Health
+        self.health = Health(max_hp=100)
 
     def input(self):
         keys = pygame.key.get_pressed()

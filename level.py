@@ -2,6 +2,7 @@ import pygame
 import pytmx
 from player import Player
 from constants.moves import MOVE_CLASSES
+from hud import HUD
 from utils.camera import CameraGroup
 from utils.map import flatten_layers, collect_base_positions, build_sprites
 
@@ -16,6 +17,7 @@ class Level:
         self.collision_sprites = pygame.sprite.Group()
         self.projectiles = []
         self.setup()
+        self.hud = HUD()
 
     def setup(self):
         tmx = pytmx.load_pygame("graphics/floor_maps/vertia_road.tmx", pixelalpha=True)
@@ -78,4 +80,5 @@ class Level:
         self.display_surface.fill(FILL_COLOUR)
         self.all_sprites.update(dt, events)
         self.all_sprites.draw(self.player)
+        self.hud.draw(self.player)
         self.projectiles = [p for p in self.projectiles if p.active]
