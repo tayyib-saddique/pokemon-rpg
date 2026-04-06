@@ -27,8 +27,7 @@ class HUD:
             (x - BORDER, y - BORDER, BAR_W + BORDER * 2, BAR_H + BORDER * 2),
             border_radius=4,
         )
-
-        # Background
+        
         pygame.draw.rect(
             self.surface, (40, 40, 40), (x, y, BAR_W, BAR_H), border_radius=3
         )
