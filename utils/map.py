@@ -18,25 +18,41 @@ def flatten_layers(layers: list) -> list:
     return result
 
 
-def collect_base_positions(layers: list, tile_h: int) -> dict:
+def collect_base_positions(layers: list, tile_h: int) -> tuple[dict, dict]:
     """
-    Pass 1 — build a dict of (tile_x, tile_y) → depth_value
-    for every Base tile in the map.
+    Pass 1 — build two dicts of (tile_x, tile_y) → depth_value:
+      - tree_base_positions  — tiles from any layer named 'Tree Base'
+      - building_base_positions — tiles from any layer named 'Building Base'
+
+    Returns empty dicts for either type when those layers aren't present,
+    so maps without trees or buildings work without any special casing.
     """
-    base_positions = {}
+    tree_base_positions: dict = {}
+    building_base_positions: dict = {}
+
     for layer in layers:
-        if isinstance(layer, pytmx.TiledTileLayer) and "Base" in layer.name:
+        if not isinstance(layer, pytmx.TiledTileLayer):
+            continue
+
+        if layer.name == "Tree Base":
             for x, y, image in layer.tiles():
                 if image:
-                    base_positions[(x, y)] = get_depth_value(y, tile_h)
-    return base_positions
+                    tree_base_positions[(x, y)] = get_depth_value(y, tile_h)
+
+        elif layer.name == "Building Base":
+            for x, y, image in layer.tiles():
+                if image:
+                    building_base_positions[(x, y)] = get_depth_value(y, tile_h)
+
+    return tree_base_positions, building_base_positions
 
 
 def build_sprites(
     layers: list,
     tile_w: int,
     tile_h: int,
-    base_positions: dict,
+    tree_base_positions: dict,
+    building_base_positions: dict,
     map_height: int,
     all_sprites,
     collision_sprites,
@@ -67,5 +83,11 @@ def build_sprites(
             sprite = Generic(pos=pos, surface=scaled, groups=all_sprites)
             sprite.layer_name = layer.name
             sprite.ground_y = tile_depth(
-                x, y, tile_h, layer.name, base_positions, fallback=map_height + 100
+                x=x,
+                y=y,
+                tile_h=tile_h,
+                layer_name=layer.name,
+                tree_base_positions=tree_base_positions,
+                building_base_positions=building_base_positions,
+                fallback=map_height + 100,
             )

@@ -1,6 +1,11 @@
-import pygame, sys
-from settings import *
+import pygame
+import sys
+import pytmx
+from constants.settings import *
 from level import Level
+from utils.transition import FadeTransition
+from constants.world import ENTRY_POSITIONS
+from constants.settings import SCALE
 
 
 class Game:
@@ -10,6 +15,25 @@ class Game:
         pygame.display.set_caption("Pokemon Mystery Dungeon Clone")
         self.clock = pygame.time.Clock()
         self.level = Level()
+        self.transition = FadeTransition((WIDTH, HEIGHT))
+
+    def _do_transition(self, edge, map_name):
+        old_player = self.level.player
+        self.level.player.frozen = True
+        self.transition.start(lambda: self._swap_map(edge, map_name, old_player))
+
+    def _swap_map(self, edge, map_name, old_player):
+        tmx_data = pytmx.load_pygame(f"graphics/floor_maps/{map_name}.tmx")
+        map_w = tmx_data.width * tmx_data.tilewidth * SCALE
+        map_h = tmx_data.height * tmx_data.tileheight * SCALE
+
+        new_pos = ENTRY_POSITIONS[edge](old_player, map_w, map_h)
+        self.level = Level(map_name, player_pos=new_pos)
+        new_pos = ENTRY_POSITIONS[edge](
+            old_player, self.level.map_width, self.level.map_height
+        )
+        self.level.player.rect.center = new_pos
+        self.level.player.hitbox.center = new_pos
 
     def run(self):
         while True:
@@ -19,9 +43,17 @@ class Game:
                     pygame.quit()
                     sys.exit()
 
-            dt = self.clock.tick() / 1000
+            dt = self.clock.tick(60) / 1000
             self.level.run(dt, events)
-            pygame.display.update()
+
+            if self.level.pending_transition and not self.transition.active:
+                edge, map_name = self.level.pending_transition
+                self.level.pending_transition = None
+                self._do_transition(edge, map_name)
+
+            self.transition.update(dt)
+            self.transition.draw(self.screen)
+            pygame.display.flip()
 
 
 if __name__ == "__main__":

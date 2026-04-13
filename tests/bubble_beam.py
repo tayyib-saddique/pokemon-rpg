@@ -19,7 +19,7 @@ Stress metrics shown on screen:
 import pygame
 import math
 import random
-from settings import WIDTH, HEIGHT, FPS
+from constants.settings import WIDTH, HEIGHT, FPS
 from player import Player
 
 B_RIM = (160, 220, 255)  # main rim colour

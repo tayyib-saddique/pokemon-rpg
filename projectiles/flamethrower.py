@@ -2,7 +2,7 @@ import pygame
 import math
 import random
 from projectiles.base import BaseProjectile
-from settings import WIDTH, HEIGHT
+from constants.settings import WIDTH, HEIGHT
 
 BG = (18, 22, 30)
 NOZZLE_OFFSET = 22

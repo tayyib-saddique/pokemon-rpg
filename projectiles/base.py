@@ -1,6 +1,6 @@
 import pygame
 
-from settings import HEIGHT, WIDTH
+from constants.settings import HEIGHT, WIDTH
 
 FACING_VELOCITY = {
     "down": (0, 1),
