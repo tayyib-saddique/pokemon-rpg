@@ -1,7 +1,5 @@
 import pygame
 
-from constants.settings import HEIGHT, WIDTH
-
 FACING_VELOCITY = {
     "down": (0, 1),
     "up": (0, -1),
@@ -16,6 +14,7 @@ FACING_VELOCITY = {
 
 class BaseProjectile(pygame.sprite.Sprite):
     MAX_RANGE = 400
+    overlay = True  # always draw above all depth sprites, including the player
 
     def __init__(
         self,
