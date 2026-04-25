@@ -7,6 +7,9 @@ MAPS = {
             "east": None,
             "west": "vertia_city",
         },
+        "enemy_spawns": [
+            {"pokemon": "charmander", "pos": (750, 550), "tier": 1, "boss": False},
+        ],
     },
     "vertia_city": {
         "path": "graphics/floor_maps/vertia_city.tmx",
