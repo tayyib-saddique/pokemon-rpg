@@ -63,6 +63,8 @@ class Player(pygame.sprite.Sprite):
         # Health
         self.health = Health(max_hp=100)
 
+        self._pos_print_timer = 0.0
+
     def input(self):
         keys = pygame.key.get_pressed()
         self.direction.x = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
@@ -225,6 +227,10 @@ class Player(pygame.sprite.Sprite):
     def update(self, dt, events):
         if self.dead or self.frozen:
             return
+        self._pos_print_timer += dt
+        if self._pos_print_timer >= 1.0:
+            self._pos_print_timer = 0.0
+            print(f"Player pos: ({self.pos.x:.0f}, {self.pos.y:.0f})")
         if self.freeze_timer > 0:
             self.freeze_timer = max(0.0, self.freeze_timer - dt)
         if self.invincible_timer > 0:

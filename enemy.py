@@ -32,6 +32,7 @@ class Enemy(pygame.sprite.Sprite):
         map_size=(1440, 1440),
         tier=1,
         is_boss=False,
+        patrol_points=None,
     ):
         super().__init__(group)
 
@@ -76,6 +77,10 @@ class Enemy(pygame.sprite.Sprite):
 
         # Hit feedback
         self.hit_timer = 0.0
+
+        # Patrol
+        self.patrol_points = [pygame.math.Vector2(p) for p in (patrol_points or [])]
+        self.patrol_index = 0
 
         # Collision
         self.collision_sprites = collision_sprites or []
@@ -150,6 +155,21 @@ class Enemy(pygame.sprite.Sprite):
         elif dist <= self.DETECTION_RANGE:
             self.direction = diff.normalize()
             self.status = f"{facing}_walk"
+        elif self.patrol_points:
+            target = self.patrol_points[self.patrol_index]
+            patrol_diff = target - self.pos
+            if patrol_diff.length() < 15:
+                self.patrol_index = (self.patrol_index + 1) % len(self.patrol_points)
+                target = self.patrol_points[self.patrol_index]
+                patrol_diff = target - self.pos
+            if patrol_diff.length() > 0:
+                self.direction = patrol_diff.normalize()
+                patrol_facing = direction_name(
+                    patrol_diff.x, patrol_diff.y, self.get_facing()
+                )
+                self.status = f"{patrol_facing}_walk"
+            else:
+                self.direction = pygame.math.Vector2()
         else:
             self.direction = pygame.math.Vector2()
             idle = f"{facing}_idle"

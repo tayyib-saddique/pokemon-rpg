@@ -82,6 +82,7 @@ class Level:
                 map_size=(self.map_width, self.map_height),
                 tier=spawn.get("tier", 1),
                 is_boss=spawn.get("boss", False),
+                patrol_points=spawn.get("patrol_points"),
             )
             self.combat_sprites.add(enemy)
 

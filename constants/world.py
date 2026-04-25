@@ -8,7 +8,20 @@ MAPS = {
             "west": "vertia_city",
         },
         "enemy_spawns": [
-            {"pokemon": "charmander", "pos": (750, 550), "tier": 1, "boss": False},
+            {
+                "pokemon": "charmander",
+                "pos": (700, 80),
+                "tier": 1,
+                "boss": False,
+                "patrol_points": None,
+            },
+            {
+                "pokemon": "charmander",
+                "pos": (239, 936),
+                "tier": 1,
+                "boss": False,
+                "patrol_points": [(239, 936), (1122, 936)],
+            },
         ],
     },
     "vertia_city": {
