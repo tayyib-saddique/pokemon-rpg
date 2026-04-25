@@ -2,4 +2,4 @@ pygame
 pytmx
 dataclasses
 
-black # For development only; not a real dependency.
+ruff # For development only; not a real dependency.
