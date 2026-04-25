@@ -6,6 +6,7 @@ from projectiles.base import BaseProjectile
 B_RIM = (160, 220, 255)
 B_SHINE = (230, 248, 255)
 B_INNER = (80, 160, 240)
+B_MID = (120, 190, 255)
 B_IRID = [
     (180, 200, 255),
     (200, 180, 255),
@@ -13,67 +14,48 @@ B_IRID = [
     (200, 230, 255),
 ]
 
+GRAVITY = 25  # pixels/s^2 — gentle arc so beam still feels directional
 
-def draw_bubble(surface, cx, cy, r, irid_index=0, alpha_scale=1.0):
-    if r < 1 or alpha_scale <= 0:
+
+def draw_pixel_bubble(surface, cx, cy, r, color=B_RIM):
+    """Crisp pixel-art bubble: hard circle outline + highlight pixel."""
+    if r < 2:
+        pygame.draw.rect(surface, color, (cx, cy, 2, 2))
         return
-
-    # Create a small transparent surface just for this bubble
-    size = (r * 2 + 4, r * 2 + 4)
-    bubble_surf = pygame.Surface(size, pygame.SRCALPHA)
-    bx, by = r + 2, r + 2  # centre within the small surface
-
-    # Inner fill — semi transparent
-    pygame.draw.circle(bubble_surf, (*B_INNER, int(30 * alpha_scale)), (bx, by), r)
-
-    # Outer rim
-    pygame.draw.circle(bubble_surf, (*B_RIM, int(190 * alpha_scale)), (bx, by), r, 2)
-    if r > 5:
-        irid = B_IRID[irid_index % len(B_IRID)]
-        pygame.draw.circle(
-            bubble_surf, (*irid, int(150 * alpha_scale)), (bx, by), r - 1, 1
-        )
-
-    # Specular highlight
-    if r >= 3:
-        hx = bx - r // 3
-        hy = by - r // 3
-        hr = max(1, r // 4)
-        pygame.draw.circle(
-            bubble_surf, (*B_SHINE, int(230 * alpha_scale)), (hx, hy), hr
-        )
-        if r >= 6:
-            pygame.draw.circle(
-                bubble_surf,
-                (*B_SHINE, int(128 * alpha_scale)),
-                (hx + 2, hy + 2),
-                max(1, hr - 1),
-            )
-
-    surface.blit(bubble_surf, (cx - r - 2, cy - r - 2))
+    pygame.draw.circle(surface, color, (cx, cy), r, 2)
+    if r >= 5:
+        pygame.draw.rect(surface, B_INNER, (cx - 1, cy - 1, 2, 2))
+    hx = cx - max(1, r // 3)
+    hy = cy - max(1, r // 3)
+    pygame.draw.rect(surface, B_SHINE, (hx, hy, 2, 2))
 
 
-class TrailBubble:
-    def __init__(self, x, y, vx, vy, irid_index):
+class StreamBubble:
+    """Beam segment: spawned at head, drifts forward slowly so it forms a tail in the beam path."""
+
+    def __init__(self, x, y, beam_vx, beam_vy, irid_index):
         self.x, self.y = float(x), float(y)
 
-        perp = math.atan2(vy, vx) + math.pi / 2
-        mag = random.uniform(5, 25) * random.choice((-1, 1))
-        self.vx = math.cos(perp) * mag + vx * 0.04
-        self.vy = math.sin(perp) * mag + vy * 0.04
+        # Travel mostly forward at ~25 % of beam speed so the head pulls ahead
+        # and these form a dense chain behind it
+        fwd_frac = random.uniform(0.20, 0.30)
+        self.vx = beam_vx * fwd_frac
+        self.vy = beam_vy * fwd_frac
 
-        self.r = random.randint(3, 7)
-        self.life = random.uniform(0.25, 0.55)
+        # Tiny perpendicular wobble keeps things from looking perfectly rigid
+        perp = math.atan2(beam_vy, beam_vx) + math.pi / 2
+        side = random.uniform(-6, 6)
+        self.vx += math.cos(perp) * side
+        self.vy += math.sin(perp) * side
+
+        self.r = random.randint(3, 6)
+        self.life = random.uniform(0.22, 0.40)
         self.max_life = self.life
         self.irid = irid_index
-        self.wobble_phase = random.uniform(0, math.tau)
-        self.wobble_speed = random.uniform(3, 6)
 
     def update(self, dt):
-        self.wobble_phase += self.wobble_speed * dt
-        w = math.sin(self.wobble_phase) * 0.4
-        self.x += (self.vx + w) * dt
-        self.y += (self.vy + w * 0.5) * dt
+        self.x += self.vx * dt
+        self.y += self.vy * dt
         self.life -= dt
 
     @property
@@ -81,40 +63,47 @@ class TrailBubble:
         return self.life > 0
 
     def draw(self, surface, offset=(0, 0)):
-        draw_bubble(
-            surface,
-            int(self.x - offset[0]),
-            int(self.y - offset[1]),
-            self.r,
-            self.irid,
-            self.life / self.max_life,
-        )
+        if self.life <= 0:
+            return
+        t = self.life / self.max_life
+        # Shrink as it fades — pixel rect for older/smaller bubbles, circle for larger
+        r = max(2, int(self.r * t + 0.5))
+        color = B_IRID[self.irid % len(B_IRID)]
+        cx = int(self.x - offset[0])
+        cy = int(self.y - offset[1])
+        if r <= 3:
+            # Tiny pixel square
+            pygame.draw.rect(surface, color, (cx - r // 2, cy - r // 2, r, r))
+        else:
+            draw_pixel_bubble(surface, cx, cy, r, color)
 
 
 class BubbleBeam(BaseProjectile):
-    TRAIL_INTERVAL = 0.04
-    HEAD_RADII = [9, 6, 4]
-    HEAD_OFFSETS = [(0, 0), (-5, 5), (6, -5)]
+    # High emit rate so bubbles overlap and read as a continuous beam
+    TRAIL_INTERVAL = 0.018
+    BUBBLES_PER_EMIT = 2
+    FREEZE_DURATION = 0.14
+
+    HEAD_RADII = [9, 6]
+    HEAD_OFFSETS = [(0, 0), (-3, 3)]
 
     def __init__(self, origin_x, origin_y, facing, **kwargs):
         super().__init__(origin_x, origin_y, facing, speed=340, **kwargs)
 
-        self.trail = []
-        self._trail_timer = 0
-        self._wobble = 0.0
+        self.stream: list[StreamBubble] = []
+        self._trail_timer = 0.0
         self._irid_cycle = 0
 
         self.rect = pygame.Rect(0, 0, 18, 18)
         self.rect.center = self.pos
 
-    def _spawn_trail(self):
+    def _emit(self):
         self._irid_cycle = (self._irid_cycle + 1) % len(B_IRID)
-        # Spawn 1-2 trail bubbles slightly behind the head
-        for _ in range(random.randint(1, 2)):
-            self.trail.append(
-                TrailBubble(
-                    self.pos.x + random.uniform(-4, 4),
-                    self.pos.y + random.uniform(-4, 4),
+        for _ in range(self.BUBBLES_PER_EMIT):
+            self.stream.append(
+                StreamBubble(
+                    self.pos.x + random.randint(-2, 2),
+                    self.pos.y + random.randint(-2, 2),
                     self.velocity.x,
                     self.velocity.y,
                     self._irid_cycle,
@@ -122,34 +111,30 @@ class BubbleBeam(BaseProjectile):
             )
 
     def update(self, dt, *args, **kwargs):
+        # Gravity arc — water beam should curve slightly downward
+        self.velocity.y += GRAVITY * dt
+
         super().update(dt)
         self.rect.center = self.pos
 
         self._trail_timer += dt
-        self._wobble += 2.5 * dt
-
         if self._trail_timer >= self.TRAIL_INTERVAL:
             self._trail_timer = 0.0
-            self._spawn_trail()
+            self._emit()
 
-        for b in self.trail:
+        for b in self.stream:
             b.update(dt)
-        self.trail = [b for b in self.trail if b.active]
+        self.stream = [b for b in self.stream if b.active]
 
     def draw(self, surface, offset=(0, 0)):
-        # Trail bubbles drawn first (behind head)
-        for b in self.trail:
+        # Stream drawn first (behind head)
+        for b in self.stream:
             b.draw(surface, offset)
 
-        # Head cluster — 3 bubbles with a gentle wobble offset
-        for i, (base_dx, base_dy) in enumerate(self.HEAD_OFFSETS):
+        # Head: two hard pixel circles
+        for i, (dx, dy) in enumerate(self.HEAD_OFFSETS):
             r = self.HEAD_RADII[i]
-
-            # Wobble each bubble slightly independently
-            phase = self._wobble + i * (math.pi * 2 / 3)
-            wdx = math.cos(phase) * 1.5
-            wdy = math.sin(phase) * 1.5
-            cx = int(self.pos.x - offset[0] + base_dx + wdx)
-            cy = int(self.pos.y - offset[1] + base_dy + wdy)
+            cx = int(self.pos.x - offset[0] + dx)
+            cy = int(self.pos.y - offset[1] + dy)
             irid = (self._irid_cycle + i) % len(B_IRID)
-            draw_bubble(surface, cx, cy, r, irid, 1.0)
+            draw_pixel_bubble(surface, cx, cy, r, B_IRID[irid])

@@ -1,5 +1,6 @@
 import pygame
-from constants.moves import POKEMON_MOVES
+from constants.moves import MOVE_CLASSES, POKEMON_MOVES
+from constants.sprite_sheets import SPRITE_SHEETS
 from utils.assets import load_pokemon_animations
 from utils.animator import Animator
 from utils.direction import direction_name
@@ -26,6 +27,7 @@ class Player(pygame.sprite.Sprite):
         self.attacking = False
         self.shooting = False
         self.attack_complete = False
+        self.freeze_timer = 0.0
 
         #  Animation
         self.animations = load_pokemon_animations(pokemon)
@@ -117,34 +119,30 @@ class Player(pygame.sprite.Sprite):
         return self.status.rsplit("_", 1)[0]
 
     def get_mouth_position(self):
-        x, y = self.rect.center
-        offsets = {
-            "up": (0, -20),
-            "down": (0, 20),
-            "left": (-20, 0),
-            "right": (20, 0),
-            "up_left": (-20, -20),
-            "up_right": (20, -20),
-            "down_left": (-20, 20),
-            "down_right": (20, 20),
-        }
-        ox, oy = offsets.get(self.get_facing(), (0, 0))
-        return x + ox, y + oy
+        rect = self.rect
+        facing = self.get_facing()
+        fracs = SPRITE_SHEETS.get(self.pokemon, {}).get("mouth_fracs", {})
+        fx, fy = fracs.get(facing, (0.50, 0.38))
+        return rect.left + rect.width * fx, rect.top + rect.height * fy
 
     def trigger_projectile(self):
         if not self.shoot_moves:
             return
+        move = self.shoot_moves[self.shoot_index]
         self.create_projectile_callback(
             self.get_mouth_position(),
             self.get_facing(),
-            self.shoot_moves[self.shoot_index],
+            move,
         )
+        cls = MOVE_CLASSES.get(move)
+        self.freeze_timer = cls.FREEZE_DURATION if cls else 0.0
 
     def animate(self, dt):
         if self.status not in self.animations:
             self.status = f"{self.get_facing()}_walk"
 
-        result = self.animator.update(self.status, dt)
+        effective_dt = 0.0 if self.freeze_timer > 0 else dt
+        result = self.animator.update(self.status, effective_dt)
 
         if result.triggered:
             self.trigger_projectile()
@@ -200,10 +198,13 @@ class Player(pygame.sprite.Sprite):
             self.hitbox.center = self.rect.center
 
     def update(self, dt, events):
+        if self.freeze_timer > 0:
+            self.freeze_timer = max(0.0, self.freeze_timer - dt)
         self.input()
         self.handle_events(events)
         self.get_status()
-        self.move(dt)
+        if not (self.shooting or self.attacking):
+            self.move(dt)
         self.animate(dt)
 
     @property

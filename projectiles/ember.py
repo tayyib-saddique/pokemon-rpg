@@ -3,34 +3,31 @@ import math
 import random
 from projectiles.base import BaseProjectile
 
-BG = (18, 22, 30)
 C_WHITE = (255, 255, 220)
 C_YELLOW = (255, 235, 30)
 C_ORANGE = (255, 115, 0)
 C_RED = (210, 20, 0)
 C_DARK = (90, 12, 0)
 
-
-def _blend(c, a):
-    return tuple(int(c[i] * a + BG[i] * (1 - a)) for i in range(3))
+GRAVITY = 35  # pixels/s^2 — slight downward arc
 
 
-def _diamond(cx, cy, w, h, angle):
-    ca, sa = math.cos(angle), math.sin(angle)
-    pts = [(w, 0), (0, h), (-w, 0), (0, -h)]
-    return [(cx + ca * px - sa * py, cy + sa * px + ca * py) for px, py in pts]
+def _pixel_cross(surface, cx, cy, w, h, color):
+    """Pixel-art cross/plus shape: two axis-aligned rects."""
+    pw, ph = max(1, int(w)), max(1, int(h))
+    pygame.draw.rect(surface, color, (cx - pw // 2, cy - ph // 2, pw, ph))
+    pygame.draw.rect(surface, color, (cx - ph // 2, cy - pw // 2, ph, pw))
 
 
 class TrailShard:
-    def __init__(self, x, y, angle, w, h, colour_t):
+    def __init__(self, x, y, w, h, colour_t):
         self.x, self.y = float(x), float(y)
-        self.angle = angle
-        self.w, self.h = w, h
         self.colour_t = colour_t
+        self.size = max(2, int((w + h) / 2))
         self.life = random.uniform(0.10, 0.22)
         self.max_life = self.life
-        self.vx = random.uniform(-8, 8)
-        self.vy = random.uniform(-8, 8)
+        self.vx = random.uniform(-6, 6)
+        self.vy = random.uniform(-6, 6)
 
     @property
     def active(self):
@@ -45,20 +42,16 @@ class TrailShard:
         t = self.life / self.max_life
         if t <= 0:
             return
-        w = max(1, self.w * t)
-        h = max(1, self.h * t)
+        size = max(1, int(self.size * t))
         if self.colour_t > 0.7:
-            outer, inner = C_ORANGE, C_YELLOW
+            color = C_YELLOW
         elif self.colour_t > 0.4:
-            outer, inner = C_RED, C_ORANGE
+            color = C_ORANGE
         else:
-            outer, inner = C_DARK, C_RED
-
-        sx, sy = self.x - offset[0], self.y - offset[1]
-        pts = _diamond(sx, sy, w, h, self.angle)
-        pts_in = _diamond(sx, sy, w * 0.5, h * 0.5, self.angle)
-        pygame.draw.polygon(surface, _blend(outer, 0.75 * t), pts)
-        pygame.draw.polygon(surface, _blend(inner, t), pts_in)
+            color = C_RED
+        px = int(self.x - offset[0]) - size // 2
+        py = int(self.y - offset[1]) - size // 2
+        pygame.draw.rect(surface, color, (px, py, size, size))
 
 
 class HeadShard:
@@ -72,25 +65,26 @@ class HeadShard:
     def update(self, dt):
         self._t += dt
 
-    def draw(self, surface, cx, cy, master_alpha=1.0):
-        pulse = 1.0 + math.sin(self._t * 22 + self.phase) * 0.15
-        perp_x = -math.sin(self.angle) * self.offset_perp
-        perp_y = math.cos(self.angle) * self.offset_perp
+    def draw(self, surface, cx, cy):
+        # Stepped pulse: toggles between two sizes every ~6 frames — no smooth sin
+        pulse = 1.1 if int(self._t * 10) % 2 == 0 else 1.0
+        perp_x = int(-math.sin(self.angle) * self.offset_perp)
+        perp_y = int(math.cos(self.angle) * self.offset_perp)
         x = cx + perp_x
         y = cy + perp_y
-        w = self.w * pulse
-        h = self.h * pulse
+        w = max(2, int(self.w * pulse))
+        h = max(2, int(self.h * pulse))
 
-        pts = _diamond(x, y, w, h, self.angle)
-        pts_mid = _diamond(x, y, w * 0.6, h * 0.6, self.angle)
-        pts_core = _diamond(x, y, w * 0.3, h * 0.3, self.angle)
-
-        pygame.draw.polygon(surface, _blend(C_RED, 0.75 * master_alpha), pts)
-        pygame.draw.polygon(surface, _blend(C_ORANGE, 0.90 * master_alpha), pts_mid)
-        pygame.draw.polygon(surface, _blend(C_YELLOW, master_alpha), pts_core)
-        if self.w > 10:
-            pts_tip = _diamond(x, y, w * 0.15, h * 0.15, self.angle)
-            pygame.draw.polygon(surface, _blend(C_WHITE, master_alpha), pts_tip)
+        # Outer cross (red)
+        _pixel_cross(surface, x, y, w, h, C_RED)
+        # Inner cross (orange)
+        _pixel_cross(surface, x, y, max(1, w // 2), max(1, h // 2), C_ORANGE)
+        # Core pixel (yellow)
+        if w > 6:
+            pygame.draw.rect(surface, C_YELLOW, (x - 1, y - 1, 2, 2))
+        # Hot centre (white)
+        if w > 10:
+            pygame.draw.rect(surface, C_WHITE, (x, y, 1, 1))
 
 
 class BurstShard:
@@ -98,13 +92,11 @@ class BurstShard:
         angle = (
             dir_angle + math.tau / total * index + math.radians(random.uniform(-12, 12))
         )
-        spd = random.uniform(100, 260)
+        spd = random.uniform(80, 220)
         self.x, self.y = float(x), float(y)
         self.vx = math.cos(angle) * spd
         self.vy = math.sin(angle) * spd
-        self.angle = angle
-        self.w = random.uniform(8, 15)
-        self.h = random.uniform(2, 5)
+        self.size = random.randint(2, 4)
         self.life = random.uniform(0.15, 0.30)
         self.max_life = self.life
 
@@ -115,31 +107,31 @@ class BurstShard:
     def update(self, dt):
         self.vx *= 1 - 4.0 * dt
         self.vy *= 1 - 4.0 * dt
+        self.vy += 30 * dt  # light gravity so shards arc downward
         self.x += self.vx * dt
         self.y += self.vy * dt
         self.life -= dt
 
     def draw(self, surface, offset=(0, 0)):
         t = self.life / self.max_life
-        w = self.w * (0.25 + 0.75 * t)
-        h = self.h * (0.25 + 0.75 * t)
+        if t <= 0:
+            return
+        size = max(1, int(self.size * t))
         if t > 0.65:
-            outer, inner = C_YELLOW, C_WHITE
+            color = C_YELLOW
         elif t > 0.35:
-            outer, inner = C_ORANGE, C_YELLOW
+            color = C_ORANGE
         else:
-            outer, inner = C_RED, C_ORANGE
-
-        sx, sy = self.x - offset[0], self.y - offset[1]
-        pts = _diamond(sx, sy, w, h, self.angle)
-        pts_in = _diamond(sx, sy, w * 0.5, h * 0.5, self.angle)
-        pygame.draw.polygon(surface, _blend(outer, 0.85 * t), pts)
-        pygame.draw.polygon(surface, _blend(inner, t), pts_in)
+            color = C_RED
+        px = int(self.x - offset[0]) - size // 2
+        py = int(self.y - offset[1]) - size // 2
+        pygame.draw.rect(surface, color, (px, py, size, size))
 
 
 class Ember(BaseProjectile):
-    TRAIL_INTERVAL = 0.018
+    TRAIL_INTERVAL = 0.022
     BURST_COUNT = 16
+    FREEZE_DURATION = 0.08
 
     HEAD_SHARDS = [
         (0, 13, 5, 0.0),
@@ -177,6 +169,9 @@ class Ember(BaseProjectile):
 
     def update(self, dt, *args, **kwargs):
         if not self._exploded:
+            # Pixel physics: gravity gives ember a falling arc
+            self.velocity.y += GRAVITY * dt
+
             super().update(dt)
             self.rect.center = self.pos
 
@@ -200,11 +195,11 @@ class Ember(BaseProjectile):
     def _deposit_trail(self):
         for _ in range(random.randint(2, 3)):
             colour_t = max(0.0, 1.0 - self._age * 3.5)
-            jx = self.pos.x + random.uniform(-3, 3)
-            jy = self.pos.y + random.uniform(-3, 3)
-            w = random.uniform(5, 9)
+            jx = self.pos.x + random.randint(-3, 3)
+            jy = self.pos.y + random.randint(-3, 3)
+            w = random.uniform(4, 8)
             h = random.uniform(2, 4)
-            self.trail.append(TrailShard(jx, jy, self._dir, w, h, colour_t))
+            self.trail.append(TrailShard(jx, jy, w, h, colour_t))
 
     def draw(self, surface, offset=(0, 0)):
         for ts in self.trail:

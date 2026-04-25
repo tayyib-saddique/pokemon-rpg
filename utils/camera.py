@@ -1,6 +1,7 @@
 """
 CameraGroup — handles camera offset, sprite bucketing, and depth-sorted drawing.
 """
+
 import pygame
 
 
@@ -13,7 +14,9 @@ class CameraGroup(pygame.sprite.Group):
     def draw(self, player):
         self._update_offset(player)
 
-        floor_sprites, shadow_sprites, depth_sprites = self._bucket_sprites(player)
+        floor_sprites, shadow_sprites, depth_sprites, overlay_sprites = (
+            self._bucket_sprites(player)
+        )
 
         for sprite in floor_sprites + shadow_sprites:
             self._blit(sprite)
@@ -24,19 +27,26 @@ class CameraGroup(pygame.sprite.Group):
         for sprite in depth_sprites:
             self._blit(sprite)
 
+        for sprite in overlay_sprites:
+            self._blit(sprite)
+
     def _update_offset(self, player):
         """Centre the camera on the player."""
         self.offset.x = player.rect.centerx - self.display_surface.get_width() // 2
         self.offset.y = player.rect.centery - self.display_surface.get_height() // 2
 
     def _bucket_sprites(self, player):
-        """Split sprites into floor, shadow, and depth buckets."""
+        """Split sprites into floor, shadow, depth, and overlay buckets."""
         floor_sprites = []
         shadow_sprites = []
         depth_sprites = []
+        overlay_sprites = []
 
         for sprite in self.sprites():
             if sprite is player:
+                continue
+            if getattr(sprite, "overlay", False):
+                overlay_sprites.append(sprite)
                 continue
             layer = getattr(sprite, "layer_name", "")
             if "Floor" in layer or "Terrain" in layer:
@@ -46,7 +56,7 @@ class CameraGroup(pygame.sprite.Group):
             else:
                 depth_sprites.append(sprite)
 
-        return floor_sprites, shadow_sprites, depth_sprites
+        return floor_sprites, shadow_sprites, depth_sprites, overlay_sprites
 
     def _blit(self, sprite):
         if hasattr(sprite, "draw"):

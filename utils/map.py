@@ -1,6 +1,7 @@
 """
 TMX map utility helpers — layer flattening and base position collection.
 """
+
 import pygame
 import pytmx
 from sprite import Generic
