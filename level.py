@@ -65,7 +65,7 @@ class Level:
             pos=player_pos,
             group=self.all_sprites,
             create_projectile_callback=self.spawn_projectile,
-            pokemon="charmander",
+            pokemon="totodile",
             map_size=(self.map_width, self.map_height),
             collision_sprites=self.collision_sprites,
         )
