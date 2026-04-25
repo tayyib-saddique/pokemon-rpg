@@ -10,6 +10,7 @@ MAPS = {
     },
     "vertia_city": {
         "path": "graphics/floor_maps/vertia_city.tmx",
+        "no_combat": True,
         "connections": {
             "north": None,
             "south": None,

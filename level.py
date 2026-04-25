@@ -36,10 +36,6 @@ class Level:
         hh = p.hitbox.height // 2
         margin = 48
 
-        print(
-            f"pos=({p.pos.x:.0f}, {p.pos.y:.0f})  west check: {p.pos.x - hw:.0f} <= {margin} = {p.pos.x - hw <= margin}"
-        )
-
         checks = [
             (p.pos.y - hh <= margin, "north"),
             (p.pos.y + hh >= self.map_height - margin, "south"),
@@ -69,6 +65,7 @@ class Level:
             map_size=(self.map_width, self.map_height),
             collision_sprites=self.collision_sprites,
         )
+        self.player.can_attack = not MAPS[self.map_name].get("no_combat", False)
 
     def _build_map(self, tmx):
         tile_w = tmx.tilewidth * SCALE
