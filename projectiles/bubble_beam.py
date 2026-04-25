@@ -25,7 +25,6 @@ def draw_pixel_bubble(surface, cx, cy, r, color=B_RIM):
     pygame.draw.circle(surface, color, (cx, cy), r, 2)
     if r >= 5:
         pygame.draw.rect(surface, B_INNER, (cx - 1, cy - 1, 2, 2))
-    # Highlight in upper-left quadrant
     hx = cx - max(1, r // 3)
     hy = cy - max(1, r // 3)
     pygame.draw.rect(surface, B_SHINE, (hx, hy, 2, 2))
@@ -83,6 +82,7 @@ class BubbleBeam(BaseProjectile):
     # High emit rate so bubbles overlap and read as a continuous beam
     TRAIL_INTERVAL = 0.018
     BUBBLES_PER_EMIT = 2
+    FREEZE_DURATION = 0.14
 
     HEAD_RADII = [9, 6]
     HEAD_OFFSETS = [(0, 0), (-3, 3)]

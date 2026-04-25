@@ -1,5 +1,5 @@
 import pygame
-from constants.moves import POKEMON_MOVES
+from constants.moves import MOVE_CLASSES, POKEMON_MOVES
 from constants.sprite_sheets import SPRITE_SHEETS
 from utils.assets import load_pokemon_animations
 from utils.animator import Animator
@@ -27,6 +27,7 @@ class Player(pygame.sprite.Sprite):
         self.attacking = False
         self.shooting = False
         self.attack_complete = False
+        self.freeze_timer = 0.0
 
         #  Animation
         self.animations = load_pokemon_animations(pokemon)
@@ -127,17 +128,21 @@ class Player(pygame.sprite.Sprite):
     def trigger_projectile(self):
         if not self.shoot_moves:
             return
+        move = self.shoot_moves[self.shoot_index]
         self.create_projectile_callback(
             self.get_mouth_position(),
             self.get_facing(),
-            self.shoot_moves[self.shoot_index],
+            move,
         )
+        cls = MOVE_CLASSES.get(move)
+        self.freeze_timer = cls.FREEZE_DURATION if cls else 0.0
 
     def animate(self, dt):
         if self.status not in self.animations:
             self.status = f"{self.get_facing()}_walk"
 
-        result = self.animator.update(self.status, dt)
+        effective_dt = 0.0 if self.freeze_timer > 0 else dt
+        result = self.animator.update(self.status, effective_dt)
 
         if result.triggered:
             self.trigger_projectile()
@@ -193,6 +198,8 @@ class Player(pygame.sprite.Sprite):
             self.hitbox.center = self.rect.center
 
     def update(self, dt, events):
+        if self.freeze_timer > 0:
+            self.freeze_timer = max(0.0, self.freeze_timer - dt)
         self.input()
         self.handle_events(events)
         self.get_status()

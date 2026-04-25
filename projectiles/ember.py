@@ -131,6 +131,7 @@ class BurstShard:
 class Ember(BaseProjectile):
     TRAIL_INTERVAL = 0.022
     BURST_COUNT = 16
+    FREEZE_DURATION = 0.08
 
     HEAD_SHARDS = [
         (0, 13, 5, 0.0),

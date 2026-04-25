@@ -12,6 +12,10 @@ C_ORANGE = (255, 115, 0)
 C_RED = (210, 20, 0)
 C_DARK = (80, 10, 0)
 
+# Fraction of a particle's life above which it shows as yellow (color_stage 1).
+# Higher = shorter yellow phase.
+_YELLOW_THRESHOLD = 0.90
+
 
 class JetParticle:
     def __init__(self, nx, ny, dir_angle, speed):
@@ -48,7 +52,7 @@ class JetParticle:
         """Returns 1 (Core), 2 (Mid), or 3 (Outer) based on age."""
         t = self.life / self.max_life
         flicker = random.uniform(-0.05, 0.05)
-        if t > 0.75 + flicker:
+        if t > _YELLOW_THRESHOLD + flicker:
             return 1
         elif t > 0.40 + flicker:
             return 2
@@ -117,23 +121,21 @@ class Flamethrower(BaseProjectile):
     PARTICLES_PER_BURST = 6  # High particle count for solid volume
     SPARK_CHANCE = 0.7
 
-    _EMIT_OFFSET = {
-        "right": (8, -4),
-        "left": (-8, -4),
-        "down": (0, 18),
-        "up": (0, -8),
-    }
+    _EMIT_DURATION = 1.2  # seconds particles are emitted
+    _MAX_PARTICLE_LIFE = 0.75  # upper bound of JetParticle.life
+    # Freeze until the last yellow core particle fades
+    FREEZE_DURATION = _EMIT_DURATION + _MAX_PARTICLE_LIFE * (1.0 - _YELLOW_THRESHOLD)
 
-    def __init__(self, origin_x, origin_y, facing, duration=1.2, **kwargs):
-        # Increased speed significantly for that high-pressure blast
+    def __init__(self, origin_x, origin_y, facing, duration=None, **kwargs):
+        if duration is None:
+            duration = self._EMIT_DURATION
         super().__init__(origin_x, origin_y, facing, speed=480, **kwargs)
 
         self._dir = math.atan2(self.velocity.y, self.velocity.x)
         self._speed = self.velocity.length()
 
-        ox, oy = self._EMIT_OFFSET.get(facing, (0, 0))
-        self._nx = float(origin_x) + math.cos(self._dir) * 4 + ox
-        self._ny = float(origin_y) + math.sin(self._dir) * 4 + oy
+        self._nx = float(origin_x)
+        self._ny = float(origin_y)
 
         self._duration = duration
         self._emit_t = 0.0
@@ -183,9 +185,8 @@ class Flamethrower(BaseProjectile):
             self.active = False
 
     def draw(self, surface, offset=(0, 0)):
-        # LAYERED DRAWING: This forces the particles to look like a solid mass
 
-        # 1. Base Layer: Dark Orange/Red (Large blocks)
+        # Base Layer: Dark Orange/Red (Large blocks)
         for p in self.particles:
             if p.color_stage == 3:
                 p.draw(surface, C_OUTER, PIXEL_SIZE * 4, offset)
@@ -194,12 +195,12 @@ class Flamethrower(BaseProjectile):
         for sp in self.sparks:
             sp.draw(surface, offset)
 
-        # 2. Mid Layer: Peach/Orange (Medium blocks)
+        # Mid Layer: Peach/Orange (Medium blocks)
         for p in self.particles:
             if p.color_stage == 2:
                 p.draw(surface, C_MID, PIXEL_SIZE * 3, offset)
 
-        # 3. Top Layer: Core White/Yellow (circular hot core)
+        # Top Layer: Core White/Yellow (circular hot core)
         for p in self.particles:
             if p.color_stage == 1:
                 sx = int((p.x - offset[0]) // PIXEL_SIZE) * PIXEL_SIZE + PIXEL_SIZE

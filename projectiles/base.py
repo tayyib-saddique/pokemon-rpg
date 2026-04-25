@@ -11,10 +11,13 @@ FACING_VELOCITY = {
     "up_left": (0.707, -0.707),
 }
 
+_UP_FACINGS = {"up", "up_left", "up_right"}
+
 
 class BaseProjectile(pygame.sprite.Sprite):
     MAX_RANGE = 400
-    overlay = True  # always draw above all depth sprites, including the player
+    # seconds the caster freezes when projectile is fired; overrided per subclass
+    FREEZE_DURATION = 0.10
 
     def __init__(
         self,
@@ -25,6 +28,7 @@ class BaseProjectile(pygame.sprite.Sprite):
         map_size=(1440, 1440),
         max_range=400,
         collision_sprites=None,
+        combat_sprites=None,
     ):
 
         # Initialize the Sprite parent class
@@ -40,9 +44,15 @@ class BaseProjectile(pygame.sprite.Sprite):
             self.velocity = self.velocity.normalize() * speed
 
         self.collision_sprites = collision_sprites
+        self.combat_sprites = combat_sprites
         self.active = True
         self.map_width, self.map_height = map_size
         self.max_range = max_range
+
+        # Up-facing projectiles render in the depth pass (behind the player).
+        # All others render in the overlay pass (in front of everything).
+        self.overlay = facing not in _UP_FACINGS
+        self.ground_y = origin_y  # updated each frame for depth sorting
 
     def update(self, dt, *args, **kwargs):
         if not self.active:
@@ -52,13 +62,24 @@ class BaseProjectile(pygame.sprite.Sprite):
 
         if hasattr(self, "rect"):
             self.rect.center = (round(self.pos.x), round(self.pos.y))
+            if not self.overlay:
+                self.ground_y = self.rect.bottom
 
             hitbox = getattr(self, "hitbox", self.rect)
             hitbox.center = self.rect.center
+
             if self.collision_sprites:
                 for sprite in self.collision_sprites:
                     if hitbox.colliderect(sprite.rect):
                         self.on_collision()
+                        self.active = False
+                        self.kill()
+                        return
+
+            if self.combat_sprites:
+                for sprite in self.combat_sprites:
+                    if hitbox.colliderect(sprite.rect):
+                        self.on_hit(sprite)
                         self.active = False
                         self.kill()
                         return
@@ -76,6 +97,11 @@ class BaseProjectile(pygame.sprite.Sprite):
     def on_collision(self):
         """Override this in subclasses for explosion animations or sounds."""
         pass
+
+    def on_hit(self, target):
+        """Called when the projectile hits a combat sprite. Override to deal damage."""
+        if hasattr(target, "health"):
+            target.health.take_damage(10)
 
     def draw(self, surface, offset=(0, 0)):
         raise NotImplementedError("Subclasses must implement draw method")
