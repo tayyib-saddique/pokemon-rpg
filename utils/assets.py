@@ -2,6 +2,7 @@
 Pokemon sprite sheet loader.
 Returns a ready-to-use animations dict for a given pokemon.
 """
+
 import os
 import pygame
 from utils.sprite_sheet import load_pmd_sheet
