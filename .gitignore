@@ -5,20 +5,6 @@ graphics/floor_maps/tilesets/*.jpg
 # Explicitly keep map data
 !graphics/floor_maps/*.tmx
 
-# Python Core
 __pycache__/
-*.py[cod]
-*$py.class
 .venv/
-venv/
-env/
-
-# Editor & AI Tools
-.vscode/
-.idea/
-.cursorignore
-.cursorindexingignore
-
-# OS Junk
-.DS_Store
-Thumbs.db
+.ruff_cache/
