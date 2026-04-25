@@ -28,6 +28,7 @@ class Player(pygame.sprite.Sprite):
         self.shooting = False
         self.attack_complete = False
         self.freeze_timer = 0.0
+        self.can_attack = True
 
         #  Animation
         self.animations = load_pokemon_animations(pokemon)
@@ -69,11 +70,19 @@ class Player(pygame.sprite.Sprite):
             if event.type != pygame.KEYDOWN:
                 continue
 
-            if event.key == pygame.K_z and not (self.attacking or self.shooting):
+            if (
+                event.key == pygame.K_z
+                and self.can_attack
+                and not (self.attacking or self.shooting)
+            ):
                 self.attacking = True
                 self.attack_complete = False
 
-            elif event.key == pygame.K_x and not (self.attacking or self.shooting):
+            elif (
+                event.key == pygame.K_x
+                and self.can_attack
+                and not (self.attacking or self.shooting)
+            ):
                 self.shooting = True
                 self.attack_complete = False
 
