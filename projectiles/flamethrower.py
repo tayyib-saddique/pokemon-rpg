@@ -12,6 +12,8 @@ C_ORANGE = (255, 115, 0)
 C_RED = (210, 20, 0)
 C_DARK = (80, 10, 0)
 
+PIXEL_SIZE = 4
+
 # Fraction of a particle's life above which it shows as yellow (color_stage 1).
 # Higher = shorter yellow phase.
 _YELLOW_THRESHOLD = 0.90
@@ -110,7 +112,7 @@ class EdgeSpark:
 
     def draw(self, surface, offset=(0, 0)):
         t = self.life / self.max_life
-        col = C_OUTER if t < 0.4 else C_MID
+        col = C_RED if t < 0.4 else C_ORANGE
         sx = int((self.x - offset[0]) // PIXEL_SIZE) * PIXEL_SIZE
         sy = int((self.y - offset[1]) // PIXEL_SIZE) * PIXEL_SIZE
         pygame.draw.rect(surface, col, (sx, sy, PIXEL_SIZE, PIXEL_SIZE))
@@ -189,7 +191,7 @@ class Flamethrower(BaseProjectile):
         # Base Layer: Dark Orange/Red (Large blocks)
         for p in self.particles:
             if p.color_stage == 3:
-                p.draw(surface, C_OUTER, PIXEL_SIZE * 4, offset)
+                p.draw(surface, C_RED, PIXEL_SIZE * 4, offset)
 
         # Sparks draw behind the core
         for sp in self.sparks:
@@ -198,11 +200,11 @@ class Flamethrower(BaseProjectile):
         # Mid Layer: Peach/Orange (Medium blocks)
         for p in self.particles:
             if p.color_stage == 2:
-                p.draw(surface, C_MID, PIXEL_SIZE * 3, offset)
+                p.draw(surface, C_ORANGE, PIXEL_SIZE * 3, offset)
 
         # Top Layer: Core White/Yellow (circular hot core)
         for p in self.particles:
             if p.color_stage == 1:
                 sx = int((p.x - offset[0]) // PIXEL_SIZE) * PIXEL_SIZE + PIXEL_SIZE
                 sy = int((p.y - offset[1]) // PIXEL_SIZE) * PIXEL_SIZE + PIXEL_SIZE
-                pygame.draw.circle(surface, C_CORE, (sx, sy), PIXEL_SIZE)
+                pygame.draw.circle(surface, C_YELLOW, (sx, sy), PIXEL_SIZE)
