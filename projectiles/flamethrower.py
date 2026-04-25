@@ -3,14 +3,9 @@ import math
 import random
 from projectiles.base import BaseProjectile
 
-BG = (18, 22, 30)
-NOZZLE_OFFSET = 22
-
-C_WHITE = (255, 255, 220)
-C_YELLOW = (255, 235, 30)
-C_ORANGE = (255, 115, 0)
-C_RED = (210, 20, 0)
-C_DARK = (80, 10, 0)
+C_CORE = (239, 235, 166)
+C_MID = (248, 166, 104)
+C_OUTER = (212, 78, 43)
 
 PIXEL_SIZE = 4
 
@@ -112,7 +107,7 @@ class EdgeSpark:
 
     def draw(self, surface, offset=(0, 0)):
         t = self.life / self.max_life
-        col = C_RED if t < 0.4 else C_ORANGE
+        col = C_OUTER if t < 0.4 else C_MID
         sx = int((self.x - offset[0]) // PIXEL_SIZE) * PIXEL_SIZE
         sy = int((self.y - offset[1]) // PIXEL_SIZE) * PIXEL_SIZE
         pygame.draw.rect(surface, col, (sx, sy, PIXEL_SIZE, PIXEL_SIZE))
@@ -191,7 +186,7 @@ class Flamethrower(BaseProjectile):
         # Base Layer: Dark Orange/Red (Large blocks)
         for p in self.particles:
             if p.color_stage == 3:
-                p.draw(surface, C_RED, PIXEL_SIZE * 4, offset)
+                p.draw(surface, C_OUTER, PIXEL_SIZE * 4, offset)
 
         # Sparks draw behind the core
         for sp in self.sparks:
@@ -200,11 +195,11 @@ class Flamethrower(BaseProjectile):
         # Mid Layer: Peach/Orange (Medium blocks)
         for p in self.particles:
             if p.color_stage == 2:
-                p.draw(surface, C_ORANGE, PIXEL_SIZE * 3, offset)
+                p.draw(surface, C_MID, PIXEL_SIZE * 3, offset)
 
         # Top Layer: Core White/Yellow (circular hot core)
         for p in self.particles:
             if p.color_stage == 1:
                 sx = int((p.x - offset[0]) // PIXEL_SIZE) * PIXEL_SIZE + PIXEL_SIZE
                 sy = int((p.y - offset[1]) // PIXEL_SIZE) * PIXEL_SIZE + PIXEL_SIZE
-                pygame.draw.circle(surface, C_YELLOW, (sx, sy), PIXEL_SIZE)
+                pygame.draw.circle(surface, C_CORE, (sx, sy), PIXEL_SIZE)

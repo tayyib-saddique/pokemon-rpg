@@ -65,7 +65,7 @@ class Level:
             pos=player_pos,
             group=self.all_sprites,
             create_projectile_callback=self.spawn_projectile,
-            pokemon="totodile",
+            pokemon="charmander",
             map_size=(self.map_width, self.map_height),
             collision_sprites=self.collision_sprites,
         )
@@ -79,16 +79,18 @@ class Level:
             layers, tile_h
         )
 
-        build_sprites(
-            layers=layers,
-            tile_w=tile_w,
-            tile_h=tile_h,
-            tree_base_positions=tree_base_positions,
-            building_base_positions=building_base_positions,
-            map_height=self.map_height,
-            all_sprites=self.all_sprites,
-            collision_sprites=self.collision_sprites,
-        ),
+        (
+            build_sprites(
+                layers=layers,
+                tile_w=tile_w,
+                tile_h=tile_h,
+                tree_base_positions=tree_base_positions,
+                building_base_positions=building_base_positions,
+                map_height=self.map_height,
+                all_sprites=self.all_sprites,
+                collision_sprites=self.collision_sprites,
+            ),
+        )
 
     def spawn_projectile(self, pos, facing, move_type):
         move_class = MOVE_CLASSES.get(move_type)

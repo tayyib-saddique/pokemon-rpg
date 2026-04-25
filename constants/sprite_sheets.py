@@ -27,8 +27,8 @@ SPRITE_SHEETS = {
             "up": (0.50, 0.50),
             # inverted so left is when charmander faces right and vice versa
             # slight asymmetry in sprite
-            "left": (0.70, 0.40),
-            "right": (0.25, 0.40),
+            "left": (0.60, 0.40),
+            "right": (0.30, 0.40),
             "down_left": (0.60, 0.40),
             "down_right": (0.35, 0.40),
             "up_left": (0.60, 0.40),
