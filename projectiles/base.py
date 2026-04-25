@@ -100,7 +100,10 @@ class BaseProjectile(pygame.sprite.Sprite):
 
     def on_hit(self, target):
         """Called when the projectile hits a combat sprite. Override to deal damage."""
-        if hasattr(target, "health"):
+        # TODO: replace flat damage with formula (type effectiveness, attack/defence stats)
+        if hasattr(target, "take_damage"):
+            target.take_damage(10)
+        elif hasattr(target, "health"):
             target.health.take_damage(10)
 
     def draw(self, surface, offset=(0, 0)):
