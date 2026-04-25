@@ -65,7 +65,7 @@ class Level:
             pos=player_pos,
             group=self.all_sprites,
             create_projectile_callback=self.spawn_projectile,
-            pokemon="totodile",
+            pokemon="charmander",
             map_size=(self.map_width, self.map_height),
             collision_sprites=self.collision_sprites,
         )
@@ -95,7 +95,7 @@ class Level:
         if not move_class:
             return
 
-        spawn_x, spawn_y = self._get_spawn_pos(facing)
+        spawn_x, spawn_y = pos
 
         p = move_class(
             spawn_x, spawn_y, facing, collision_sprites=self.collision_sprites
@@ -106,12 +106,6 @@ class Level:
 
         self.all_sprites.add(p)
         self.projectiles.append(p)
-
-    def _get_spawn_pos(self, facing):
-        hb = self.player.hitbox
-        spawn_x = hb.centerx + 7.5 * (1 if "right" in facing else -1)
-        spawn_y = hb.top + 10
-        return spawn_x, spawn_y
 
     def run(self, dt, events):
         self.display_surface.fill(FILL_COLOUR)
