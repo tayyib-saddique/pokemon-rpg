@@ -1,5 +1,0 @@
-pygame
-pytmx
-dataclasses
-
-ruff # For development only; not a real dependency.
