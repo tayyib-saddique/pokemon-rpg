@@ -8,3 +8,4 @@ graphics/floor_maps/tilesets/*.jpg
 __pycache__/
 .venv/
 .ruff_cache/
+.python-version

@@ -23,7 +23,7 @@ Python-based Pokémon RPG game built with Pygame, inspired by the mechanics of P
 ```
 
 ## Requirements and installation
-To run this game, you will need Python 3.x and the Pygame library installed on your machine. 
+This project requires **Python 3.10+** and the **uv** package manager.
 
 1. Clone the repository
 ```
@@ -32,11 +32,11 @@ cd pokemon-rpg
 ```
 2. Install dependencies
 ```
-pip install -r requirements.txt
+uv sync
 ```
 3. Launch the game
 ```
-python main.py
+uv run main.py
 ```
 
 ## Gameplay Preview
