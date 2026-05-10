@@ -1,6 +1,6 @@
 import pygame
-from constants.moves import MOVE_CLASSES, POKEMON_MOVES
-from constants.sprite_sheets import SPRITE_SHEETS
+from config.moves import MOVE_CLASSES, POKEMON_MOVES
+from config.sprite_sheets import SPRITE_SHEETS
 from utils.assets import load_pokemon_animations
 from utils.animator import Animator
 from utils.direction import direction_name

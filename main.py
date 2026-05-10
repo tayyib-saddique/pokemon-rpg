@@ -1,11 +1,11 @@
 import pygame
 import sys
 import pytmx
-from constants.settings import *
-from level import Level
-from utils.transition import FadeTransition
-from constants.world import ENTRY_POSITIONS
-from constants.settings import SCALE
+from config.settings import *
+from world.level import Level
+from ui.transition import FadeTransition
+from config.world import ENTRY_POSITIONS
+from config.settings import SCALE
 
 
 GAME_OVER_OVERLAY = (0, 0, 0, 160)
@@ -31,7 +31,7 @@ class Game:
         self.transition.start(lambda: self._swap_map(edge, map_name, old_player))
 
     def _swap_map(self, edge, map_name, old_player):
-        tmx_data = pytmx.load_pygame(f"graphics/floor_maps/{map_name}.tmx")
+        tmx_data = pytmx.load_pygame(f"assets/floor_maps/{map_name}.tmx")
         map_w = tmx_data.width * tmx_data.tilewidth * SCALE
         map_h = tmx_data.height * tmx_data.tileheight * SCALE
 

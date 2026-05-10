@@ -19,8 +19,8 @@ Stress metrics shown on screen:
 import pygame
 import math
 import random
-from constants.settings import WIDTH, HEIGHT, FPS
-from player import Player
+from config.settings import WIDTH, HEIGHT, FPS
+from entities.player import Player
 
 B_RIM = (160, 220, 255)  # main rim colour
 B_SHINE = (230, 248, 255)  # specular dot

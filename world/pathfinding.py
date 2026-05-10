@@ -1,7 +1,7 @@
 from typing import List, Tuple, Any
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
-from utils.matrix import build_collision_matrix
+from world.matrix import build_collision_matrix
 
 WorldPos = Tuple[float, float]
 GridPos = Tuple[int, int]
