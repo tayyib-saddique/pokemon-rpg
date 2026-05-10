@@ -192,22 +192,30 @@ class Player(pygame.sprite.Sprite):
 
     def _collide(self, direction):
         for sprite in self.collision_sprites:
-            if not sprite.rect.colliderect(self.hitbox):
-                continue
+            self._resolve_axis(sprite.rect, direction)
 
-            if direction == "horizontal":
-                if self.direction.x > 0:
-                    self.hitbox.right = sprite.rect.left
-                if self.direction.x < 0:
-                    self.hitbox.left = sprite.rect.right
-                self.pos.x = self.hitbox.centerx
+        for entity in getattr(self, "entity_blockers", []):
+            self._resolve_axis(entity.hitbox, direction)
 
-            if direction == "vertical":
-                if self.direction.y > 0:
-                    self.hitbox.bottom = sprite.rect.top
-                if self.direction.y < 0:
-                    self.hitbox.top = sprite.rect.bottom
-                self.pos.y = self.hitbox.centery
+    def _resolve_axis(self, wall, direction):
+        if not wall.colliderect(self.hitbox):
+            return
+        if direction == "horizontal":
+            push_left = self.hitbox.right - wall.left
+            push_right = wall.right - self.hitbox.left
+            if push_left < push_right:
+                self.hitbox.right = wall.left
+            else:
+                self.hitbox.left = wall.right
+            self.pos.x = self.hitbox.centerx
+        else:
+            push_up = self.hitbox.bottom - wall.top
+            push_down = wall.bottom - self.hitbox.top
+            if push_up < push_down:
+                self.hitbox.bottom = wall.top
+            else:
+                self.hitbox.top = wall.bottom
+            self.pos.y = self.hitbox.centery
 
     def clamp_to_map(self):
         map_rect = pygame.Rect(0, 0, self.map_width, self.map_height)
@@ -227,10 +235,6 @@ class Player(pygame.sprite.Sprite):
     def update(self, dt, events):
         if self.dead or self.frozen:
             return
-        self._pos_print_timer += dt
-        if self._pos_print_timer >= 1.0:
-            self._pos_print_timer = 0.0
-            print(f"Player pos: ({self.pos.x:.0f}, {self.pos.y:.0f})")
         if self.freeze_timer > 0:
             self.freeze_timer = max(0.0, self.freeze_timer - dt)
         if self.invincible_timer > 0:

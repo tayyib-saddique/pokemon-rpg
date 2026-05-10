@@ -9,6 +9,7 @@ Usage:
     if result.triggered: ...
     if result.finished: ...
 """
+
 from dataclasses import dataclass
 from typing import Any
 
