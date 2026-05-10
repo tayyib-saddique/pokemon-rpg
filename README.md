@@ -10,15 +10,14 @@ Python-based Pokémon RPG game built with Pygame, inspired by the mechanics of P
 
 ## Project Structure
 ```
-├── constants/         # Pokémon stats, moves, and game data
-├── graphics/          # tilesets and maps
+├── config/            # game settings, Pokémon move/sprite data, world/map registry
+├── entities/          # player, enemy, and generic tile sprite classes
+├── world/             # level orchestration, camera, map building, pathfinding
+├── ui/                # HUD and screen transitions
 ├── projectiles/       # AI-optimised projectiles
+├── utils/             # helper functions
+├── assets/            # tilesets and Pokémon sprite sheets
 ├── tests/             # stress-tests
-├── utils/             # utility functions
-├── level.py           # world manager, handling map loading and managing the player
-├── player.py          # handles player logic including sprite animation and movement
-├── settings.py        # controls game settings
-├── hud.py             # UI/HUD rendering logic
 └── main.py            # Main game loop and entry point
 ```
 
@@ -53,7 +52,7 @@ The Pokémon sprites used in this project are sourced from the [PMD Sprite Repos
 This project uses the following assets which are not included in this repo due to licensing 
 - [Asset Alliance](https://itch.io/b/3513/all-in-1-mega-bundle-update-4)
   
-To run the game, please place the purchased assets in the `/graphics/floormaps/tilesets/` directory.
+To run the game, please place the purchased assets in the `assets/floor_maps/tilesets/` directory.
 
 ### License
 This project is for educational purposes. Pokémon and all related properties are trademarks of Nintendo, Game Freak, and Creatures Inc.

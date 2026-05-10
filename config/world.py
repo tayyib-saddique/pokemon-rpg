@@ -1,6 +1,6 @@
 MAPS = {
     "vertia_road": {
-        "path": "graphics/floor_maps/vertia_road.tmx",
+        "path": "assets/floor_maps/vertia_road.tmx",
         "connections": {
             "north": None,
             "south": None,
@@ -17,7 +17,7 @@ MAPS = {
         ],
     },
     "vertia_city": {
-        "path": "graphics/floor_maps/vertia_city.tmx",
+        "path": "assets/floor_maps/vertia_city.tmx",
         "no_combat": True,
         "connections": {
             "north": None,

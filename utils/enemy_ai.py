@@ -1,7 +1,7 @@
 import math
 import time
 from typing import Tuple, List
-from utils.pathfinding import NavGrid
+from world.pathfinding import NavGrid
 
 WorldPos = Tuple[float, float]
 

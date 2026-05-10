@@ -1,17 +1,17 @@
 import pygame
 import pytmx
 
-from player import Player
-from enemy import Enemy
+from entities.player import Player
+from entities.enemy import Enemy
 
-from constants.moves import MOVE_CLASSES
-from constants.world import MAPS
-from constants.settings import SCALE
+from config.moves import MOVE_CLASSES
+from config.world import MAPS
+from config.settings import SCALE
 
-from hud import HUD
-from utils.camera import CameraGroup
-from utils.map import flatten_layers, collect_base_positions, build_sprites
-from utils.pathfinding import NavGrid
+from ui.hud import HUD
+from world.camera import CameraGroup
+from world.map import flatten_layers, collect_base_positions, build_sprites
+from world.pathfinding import NavGrid
 
 
 FILL_COLOUR = (60, 55, 65)
@@ -41,7 +41,7 @@ class Level:
 
     def _setup_map(self, player_pos):
         tmx = pytmx.load_pygame(
-            f"graphics/floor_maps/{self.map_name}.tmx", pixelalpha=True
+            f"assets/floor_maps/{self.map_name}.tmx", pixelalpha=True
         )
 
         self.map_width = tmx.width * tmx.tilewidth * SCALE

@@ -1,9 +1,9 @@
 
-graphics/floor_maps/tilesets/*.png
-graphics/floor_maps/tilesets/*.jpg
+assets/floor_maps/tilesets/*.png
+assets/floor_maps/tilesets/*.jpg
 
 # Explicitly keep map data
-!graphics/floor_maps/*.tmx
+!assets/floor_maps/*.tmx
 
 __pycache__/
 .venv/

@@ -6,7 +6,7 @@ Returns a ready-to-use animations dict for a given pokemon.
 import os
 import pygame
 from utils.sprite_sheet import load_pmd_sheet
-from constants.sprite_sheets import SPRITE_SHEETS
+from config.sprite_sheets import SPRITE_SHEETS
 
 SCALE = 3
 
@@ -22,7 +22,7 @@ def load_pokemon_animations(pokemon: str) -> dict:
 
     for action in actions:
         data = pokemon_data.get(action)
-        path = f"graphics/pokemon/{pokemon}/{action}.png"
+        path = f"assets/pokemon/{pokemon}/{action}.png"
 
         if not data or not os.path.exists(path):
             continue

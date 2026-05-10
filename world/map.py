@@ -4,8 +4,8 @@ TMX map utility helpers — layer flattening and base position collection.
 
 import pygame
 import pytmx
-from sprite import Generic
-from utils.depth import get_depth_value, tile_depth
+from entities.sprite import Generic
+from world.depth import get_depth_value, tile_depth
 
 
 def flatten_layers(layers: list) -> list:
