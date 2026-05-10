@@ -92,3 +92,13 @@ def build_sprites(
                 building_base_positions=building_base_positions,
                 fallback=map_height + 100,
             )
+
+
+def build_collision_matrix_from_tmx(layer, cols, rows):
+    grid = [[0 for _ in range(cols)] for _ in range(rows)]
+
+    for x, y, gid in layer.tiles():
+        if gid != 0:
+            grid[y][x] = 1
+
+    return grid

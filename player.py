@@ -29,6 +29,9 @@ class Player(pygame.sprite.Sprite):
         self.attack_complete = False
         self.freeze_timer = 0.0
         self.can_attack = True
+        self.frozen = False
+        self.dead = False
+        self.invincible_timer = 0.0
 
         #  Animation
         self.animations = load_pokemon_animations(pokemon)
@@ -59,6 +62,8 @@ class Player(pygame.sprite.Sprite):
 
         # Health
         self.health = Health(max_hp=100)
+
+        self._pos_print_timer = 0.0
 
     def input(self):
         keys = pygame.key.get_pressed()
@@ -161,7 +166,12 @@ class Player(pygame.sprite.Sprite):
             self.attack_complete = True
 
         if result.image:
-            self.image = result.image
+            if self.invincible_timer > 0 and int(self.invincible_timer * 10) % 2 == 0:
+                img = result.image.copy()
+                img.set_alpha(60)
+                self.image = img
+            else:
+                self.image = result.image
 
         self.rect = self.image.get_rect(center=self.hitbox.center)
         self.clamp_to_map()
@@ -182,22 +192,30 @@ class Player(pygame.sprite.Sprite):
 
     def _collide(self, direction):
         for sprite in self.collision_sprites:
-            if not sprite.rect.colliderect(self.hitbox):
-                continue
+            self._resolve_axis(sprite.rect, direction)
 
-            if direction == "horizontal":
-                if self.direction.x > 0:
-                    self.hitbox.right = sprite.rect.left
-                if self.direction.x < 0:
-                    self.hitbox.left = sprite.rect.right
-                self.pos.x = self.hitbox.centerx
+        for entity in getattr(self, "entity_blockers", []):
+            self._resolve_axis(entity.hitbox, direction)
 
-            if direction == "vertical":
-                if self.direction.y > 0:
-                    self.hitbox.bottom = sprite.rect.top
-                if self.direction.y < 0:
-                    self.hitbox.top = sprite.rect.bottom
-                self.pos.y = self.hitbox.centery
+    def _resolve_axis(self, wall, direction):
+        if not wall.colliderect(self.hitbox):
+            return
+        if direction == "horizontal":
+            push_left = self.hitbox.right - wall.left
+            push_right = wall.right - self.hitbox.left
+            if push_left < push_right:
+                self.hitbox.right = wall.left
+            else:
+                self.hitbox.left = wall.right
+            self.pos.x = self.hitbox.centerx
+        else:
+            push_up = self.hitbox.bottom - wall.top
+            push_down = wall.bottom - self.hitbox.top
+            if push_up < push_down:
+                self.hitbox.bottom = wall.top
+            else:
+                self.hitbox.top = wall.bottom
+            self.pos.y = self.hitbox.centery
 
     def clamp_to_map(self):
         map_rect = pygame.Rect(0, 0, self.map_width, self.map_height)
@@ -206,9 +224,21 @@ class Player(pygame.sprite.Sprite):
             self.pos.update(self.rect.center)
             self.hitbox.center = self.rect.center
 
+    def take_damage(self, amount):
+        if self.invincible_timer > 0 or self.dead:
+            return
+        self.health.take_damage(amount)
+        self.invincible_timer = 1.0
+        if self.health.is_dead:
+            self.dead = True
+
     def update(self, dt, events):
+        if self.dead or self.frozen:
+            return
         if self.freeze_timer > 0:
             self.freeze_timer = max(0.0, self.freeze_timer - dt)
+        if self.invincible_timer > 0:
+            self.invincible_timer = max(0.0, self.invincible_timer - dt)
         self.input()
         self.handle_events(events)
         self.get_status()

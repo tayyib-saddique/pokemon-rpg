@@ -54,6 +54,12 @@ class BaseProjectile(pygame.sprite.Sprite):
         self.overlay = facing not in _UP_FACINGS
         self.ground_y = origin_y  # updated each frame for depth sorting
 
+        # Walls we already overlap at spawn — the projectile rect can clip into
+        # a neighbouring wall tile when fired from a sprite's mouth, and we
+        # don't want to die instantly. Populated lazily on the first update
+        # because subclasses build self.rect after super().__init__.
+        self._spawn_ignore = None
+
     def update(self, dt, *args, **kwargs):
         if not self.active:
             return
@@ -68,9 +74,21 @@ class BaseProjectile(pygame.sprite.Sprite):
             hitbox = getattr(self, "hitbox", self.rect)
             hitbox.center = self.rect.center
 
+            if self._spawn_ignore is None:
+                self._spawn_ignore = {
+                    id(s)
+                    for s in (self.collision_sprites or [])
+                    if hitbox.colliderect(s.rect)
+                }
+
             if self.collision_sprites:
                 for sprite in self.collision_sprites:
-                    if hitbox.colliderect(sprite.rect):
+                    overlapping = hitbox.colliderect(sprite.rect)
+                    if id(sprite) in self._spawn_ignore:
+                        if not overlapping:
+                            self._spawn_ignore.discard(id(sprite))
+                        continue
+                    if overlapping:
                         self.on_collision()
                         self.active = False
                         self.kill()
@@ -100,7 +118,10 @@ class BaseProjectile(pygame.sprite.Sprite):
 
     def on_hit(self, target):
         """Called when the projectile hits a combat sprite. Override to deal damage."""
-        if hasattr(target, "health"):
+        # TODO: replace flat damage with formula (type effectiveness, attack/defence stats)
+        if hasattr(target, "take_damage"):
+            target.take_damage(10)
+        elif hasattr(target, "health"):
             target.health.take_damage(10)
 
     def draw(self, surface, offset=(0, 0)):
