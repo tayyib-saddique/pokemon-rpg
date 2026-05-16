@@ -1,7 +1,7 @@
 import pygame
 import sys
 import pytmx
-from config.settings import *
+from config.settings import WIDTH, HEIGHT
 from world.level import Level
 from ui.transition import FadeTransition
 from config.world import ENTRY_POSITIONS
