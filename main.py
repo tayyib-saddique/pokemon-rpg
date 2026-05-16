@@ -9,7 +9,7 @@ from config.settings import SCALE
 
 
 GAME_OVER_OVERLAY = (0, 0, 0, 160)
-START_MAP = "vertia_road"
+START_MAP = "vertia_city"
 START_POS = (500, 500)
 
 
