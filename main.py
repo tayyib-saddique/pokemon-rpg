@@ -1,7 +1,7 @@
 import pygame
 import sys
 import pytmx
-from config.settings import *
+from config.settings import WIDTH, HEIGHT
 from world.level import Level
 from ui.transition import FadeTransition
 from config.world import ENTRY_POSITIONS
@@ -9,7 +9,7 @@ from config.settings import SCALE
 
 
 GAME_OVER_OVERLAY = (0, 0, 0, 160)
-START_MAP = "vertia_road"
+START_MAP = "vertia_city"
 START_POS = (500, 500)
 
 
