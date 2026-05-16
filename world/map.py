@@ -19,17 +19,20 @@ def flatten_layers(layers: list) -> list:
     return result
 
 
-def collect_base_positions(layers: list, tile_h: int) -> tuple[dict, dict]:
+def collect_base_positions(layers: list, tile_h: int) -> tuple[dict, dict, dict]:
     """
-    Pass 1 — build two dicts of (tile_x, tile_y) → depth_value:
+    Pass 1 — build dicts of (tile_x, tile_y) → depth_value:
       - tree_base_positions  — tiles from any layer named 'Tree Base'
-      - building_base_positions — tiles from any layer named 'Building Base'
+      - building_base_positions — tiles from any layer named 'Building Base' / 'Building'
+      - town_positions — every tile in any 'Town' layer, used for self-anchored
+        depth lookups on town overlay objects
 
-    Returns empty dicts for either type when those layers aren't present,
-    so maps without trees or buildings work without any special casing.
+    Returns empty dicts for any type when those layers aren't present,
+    so maps without them work without any special casing.
     """
     tree_base_positions: dict = {}
     building_base_positions: dict = {}
+    town_positions: dict = {}
 
     for layer in layers:
         if not isinstance(layer, pytmx.TiledTileLayer):
@@ -40,12 +43,17 @@ def collect_base_positions(layers: list, tile_h: int) -> tuple[dict, dict]:
                 if image:
                     tree_base_positions[(x, y)] = get_depth_value(y, tile_h)
 
-        elif layer.name == "Building Base":
+        elif layer.name in ("Building Base", "Building"):
             for x, y, image in layer.tiles():
                 if image:
                     building_base_positions[(x, y)] = get_depth_value(y, tile_h)
 
-    return tree_base_positions, building_base_positions
+        elif "Town" in layer.name:
+            for x, y, image in layer.tiles():
+                if image:
+                    town_positions[(x, y)] = get_depth_value(y, tile_h)
+
+    return tree_base_positions, building_base_positions, town_positions
 
 
 def build_sprites(
@@ -54,6 +62,7 @@ def build_sprites(
     tile_h: int,
     tree_base_positions: dict,
     building_base_positions: dict,
+    town_positions: dict,
     map_height: int,
     all_sprites,
     collision_sprites,
@@ -90,6 +99,7 @@ def build_sprites(
                 layer_name=layer.name,
                 tree_base_positions=tree_base_positions,
                 building_base_positions=building_base_positions,
+                town_positions=town_positions,
                 fallback=map_height + 100,
             )
 

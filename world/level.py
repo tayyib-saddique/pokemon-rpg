@@ -35,10 +35,7 @@ class Level:
         self._setup_map(player_pos)
         self.hud = HUD()
 
-    # --------------------------
     # Setup
-    # --------------------------
-
     def _setup_map(self, player_pos):
         tmx = pytmx.load_pygame(
             f"assets/floor_maps/{self.map_name}.tmx", pixelalpha=True
@@ -64,8 +61,8 @@ class Level:
 
         layers = flatten_layers(tmx.layers)
 
-        tree_base_positions, building_base_positions = collect_base_positions(
-            layers, tile_h
+        tree_base_positions, building_base_positions, town_positions = (
+            collect_base_positions(layers, tile_h)
         )
 
         build_sprites(
@@ -74,6 +71,7 @@ class Level:
             tile_h=tile_h,
             tree_base_positions=tree_base_positions,
             building_base_positions=building_base_positions,
+            town_positions=town_positions,
             map_height=self.map_height,
             all_sprites=self.all_sprites,
             collision_sprites=self.collision_sprites,
@@ -110,10 +108,7 @@ class Level:
             )
             self.combat_sprites.add(enemy)
 
-    # --------------------------
     # Projectiles
-    # --------------------------
-
     def spawn_enemy_projectile(self, pos, facing, move_type):
         move_class = MOVE_CLASSES.get(move_type)
         if not move_class:
@@ -153,10 +148,7 @@ class Level:
         self.all_sprites.add(p)
         self.projectiles.append(p)
 
-    # --------------------------
     # Collision Safety
-    # --------------------------
-
     def _resolve_entity_overlaps(self):
         for enemy in self.combat_sprites:
             ph = self.player.hitbox
@@ -197,10 +189,7 @@ class Level:
                 round(enemy.pos.y),
             )
 
-    # --------------------------
     # Transitions
-    # --------------------------
-
     def _check_transition(self):
         if self.pending_transition:
             return
@@ -224,10 +213,7 @@ class Level:
                 self.pending_transition = (edge, connections[edge])
                 break
 
-    # --------------------------
     # Main Loop
-    # --------------------------
-
     def run(self, dt, events):
         self.display_surface.fill(FILL_COLOUR)
 
