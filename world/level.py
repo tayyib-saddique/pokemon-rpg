@@ -23,6 +23,8 @@ class Level:
 
         self.map_name = map_name
         self.pending_transition = None
+        self.door_rects: list = []
+        self.door_cooldown_until = 0
 
         # Groups
         self.all_sprites = CameraGroup()
@@ -65,7 +67,7 @@ class Level:
             collect_base_positions(layers, tile_h)
         )
 
-        build_sprites(
+        self.door_rects = build_sprites(
             layers=layers,
             tile_w=tile_w,
             tile_h=tile_h,
@@ -194,6 +196,9 @@ class Level:
         if self.pending_transition:
             return
 
+        if self._check_door_transition():
+            return
+
         connections = MAPS[self.map_name]["connections"]
         p = self.player
 
@@ -212,6 +217,21 @@ class Level:
             if condition and connections.get(edge):
                 self.pending_transition = (edge, connections[edge])
                 break
+
+    def _check_door_transition(self) -> bool:
+        if pygame.time.get_ticks() < self.door_cooldown_until:
+            return False
+
+        if not self.door_rects:
+            return False
+
+        if self.player.hitbox.collidelist(self.door_rects) == -1:
+            return False
+
+        # Destinations aren't wired up yet — fire the transition with a
+        # None target so main.py fades but skips the map swap.
+        self.pending_transition = ("door", None)
+        return True
 
     # Main Loop
     def run(self, dt, events):

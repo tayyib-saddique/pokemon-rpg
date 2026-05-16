@@ -28,7 +28,18 @@ class Game:
     def _do_transition(self, edge, map_name):
         old_player = self.level.player
         self.level.player.frozen = True
+
+        if edge == "door" and map_name is None:
+            # Doors don't lead anywhere yet — fade, then unfreeze on the
+            # same map and cool down the door check so we don't retrigger.
+            self.transition.start(self._end_dead_door_transition)
+            return
+
         self.transition.start(lambda: self._swap_map(edge, map_name, old_player))
+
+    def _end_dead_door_transition(self):
+        self.level.player.frozen = False
+        self.level.door_cooldown_until = pygame.time.get_ticks() + 1500
 
     def _swap_map(self, edge, map_name, old_player):
         tmx_data = pytmx.load_pygame(f"assets/floor_maps/{map_name}.tmx")
