@@ -65,6 +65,8 @@ class Level:
 
         tree_base_positions, building_base_positions, town_positions = (
             collect_base_positions(layers, tile_h)
+        tree_base_positions, building_base_positions, town_positions = (
+            collect_base_positions(layers, tile_h)
         )
 
         self.door_rects = build_sprites(
@@ -73,6 +75,7 @@ class Level:
             tile_h=tile_h,
             tree_base_positions=tree_base_positions,
             building_base_positions=building_base_positions,
+            town_positions=town_positions,
             town_positions=town_positions,
             map_height=self.map_height,
             all_sprites=self.all_sprites,
@@ -217,21 +220,6 @@ class Level:
             if condition and connections.get(edge):
                 self.pending_transition = (edge, connections[edge])
                 break
-
-    def _check_door_transition(self) -> bool:
-        if pygame.time.get_ticks() < self.door_cooldown_until:
-            return False
-
-        if not self.door_rects:
-            return False
-
-        if self.player.hitbox.collidelist(self.door_rects) == -1:
-            return False
-
-        # Destinations aren't wired up yet — fire the transition with a
-        # None target so main.py fades but skips the map swap.
-        self.pending_transition = ("door", None)
-        return True
 
     # Main Loop
     def run(self, dt, events):
