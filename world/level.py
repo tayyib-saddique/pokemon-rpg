@@ -74,7 +74,6 @@ class Level:
             tree_base_positions=tree_base_positions,
             building_base_positions=building_base_positions,
             town_positions=town_positions,
-            town_positions=town_positions,
             map_height=self.map_height,
             all_sprites=self.all_sprites,
             collision_sprites=self.collision_sprites,
