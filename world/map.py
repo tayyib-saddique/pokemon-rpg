@@ -43,7 +43,7 @@ def collect_base_positions(layers: list, tile_h: int) -> tuple[dict, dict, dict]
                 if image:
                     tree_base_positions[(x, y)] = get_depth_value(y, tile_h)
 
-        elif layer.name in ("Building Base", "Building"):
+        elif layer.name in ("Buildings", "Buildings Base"):
             for x, y, image in layer.tiles():
                 if image:
                     building_base_positions[(x, y)] = get_depth_value(y, tile_h)
@@ -107,7 +107,9 @@ def build_sprites(
             )
 
             if "Door" in layer.name:
-                door_rects.append(pygame.Rect(pos, (tile_w, tile_h)))
+                trigger = pygame.Rect(pos, (tile_w, tile_h))
+                trigger.inflate_ip(-tile_w // 2, -tile_h // 2)
+                door_rects.append(trigger)
 
     return door_rects
 

@@ -44,7 +44,7 @@ def tile_depth(
     if "Tree Tips" in layer_name or "Tree Mid" in layer_name:
         return find_anchor_depth(x, y, tree_base_positions, fallback)
 
-    if "Building Roof" in layer_name:
+    if "Building Roof" in layer_name or "Buildings Roof" in layer_name:
         return find_anchor_depth(x, y, building_base_positions, fallback)
 
     if "Town" in layer_name:
