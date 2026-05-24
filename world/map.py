@@ -66,11 +66,14 @@ def build_sprites(
     map_height: int,
     all_sprites,
     collision_sprites,
-) -> None:
+) -> list:
     """
     Pass 2 — iterate every tile layer and create Generic sprites,
-    assigning ground_y for depth sorting.
+    assigning ground_y for depth sorting. Returns the list of door
+    trigger rects collected from any 'Doors' layer.
     """
+    door_rects: list = []
+
     for layer in layers:
         if not isinstance(layer, pytmx.TiledTileLayer):
             continue
@@ -102,6 +105,11 @@ def build_sprites(
                 town_positions=town_positions,
                 fallback=map_height + 100,
             )
+
+            if "Door" in layer.name:
+                door_rects.append(pygame.Rect(pos, (tile_w, tile_h)))
+
+    return door_rects
 
 
 def build_collision_matrix_from_tmx(layer, cols, rows):
