@@ -218,6 +218,19 @@ class Level:
                 self.pending_transition = (edge, connections[edge])
                 break
 
+    def _check_door_transition(self) -> bool:
+        if pygame.time.get_ticks() < self.door_cooldown_until:
+            return False
+
+        if not self.door_rects:
+            return False
+
+        if self.player.hitbox.collidelist(self.door_rects) == -1:
+            return False
+
+        self.pending_transition = ("door", None)
+        return True
+
     # Main Loop
     def run(self, dt, events):
         self.display_surface.fill(FILL_COLOUR)
