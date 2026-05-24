@@ -65,8 +65,6 @@ class Level:
 
         tree_base_positions, building_base_positions, town_positions = (
             collect_base_positions(layers, tile_h)
-        tree_base_positions, building_base_positions, town_positions = (
-            collect_base_positions(layers, tile_h)
         )
 
         self.door_rects = build_sprites(
@@ -109,7 +107,7 @@ class Level:
                 map_size=(self.map_width, self.map_height),
                 tier=spawn.get("tier", 1),
                 is_boss=spawn.get("boss", False),
-                nav_grid=self.nav_grid,  # ✅ critical
+                nav_grid=self.nav_grid,
             )
             self.combat_sprites.add(enemy)
 
