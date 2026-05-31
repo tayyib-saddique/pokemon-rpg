@@ -1,9 +1,3 @@
-"""
-Direction name resolution from a movement vector.
-Pure function — no pygame state, no class required.
-"""
-
-
 def direction_name(dx: float, dy: float, fallback: str = "down") -> str:
     """
     Map a (dx, dy) movement vector to a facing string.

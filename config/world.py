@@ -1,3 +1,10 @@
+def map_connection(target_map, entry_pos):
+    return {
+        "map": target_map,
+        "entry_pos": entry_pos,
+    }
+
+
 MAPS = {
     "vertia_road": {
         "path": "assets/floor_maps/vertia_road.tmx",
@@ -5,7 +12,7 @@ MAPS = {
             "north": None,
             "south": None,
             "east": None,
-            "west": "vertia_city",
+            "west": map_connection("vertia_city", (2817, 568)),
         },
         "enemy_spawns": [
             {
@@ -22,15 +29,12 @@ MAPS = {
         "connections": {
             "north": None,
             "south": None,
-            "east": "vertia_road",
+            "east": map_connection("vertia_road", (126, 568)),
             "west": None,
         },
     },
 }
 
-ENTRY_POSITIONS = {
-    "west": lambda p, w, h: (w - 120, p.pos.y),
-    "east": lambda p, w, h: (120, p.pos.y),
-    "north": lambda p, w, h: (p.pos.x, h - 120),
-    "south": lambda p, w, h: (p.pos.x, 120),
-}
+
+def get_connection(source_map, edge):
+    return MAPS[source_map]["connections"].get(edge)
