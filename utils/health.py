@@ -1,7 +1,3 @@
-"""
-Health system — shared by Player and Enemy.
-"""
-
 from dataclasses import dataclass
 
 

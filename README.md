@@ -51,6 +51,7 @@ The Pokémon sprites used in this project are sourced from the [PMD Sprite Repos
 ### Tilesets
 This project uses the following assets which are not included in this repo due to licensing 
 - [Asset Alliance](https://itch.io/b/3513/all-in-1-mega-bundle-update-4)
+- [Cute Fantasy](https://itch.io/s/116495/cute-fantasy-rpg-sale) (ImageMagick was used to generate spirte sheets from PNG images per directory)
   
 To run the game, please place the purchased assets in the `assets/floor_maps/tilesets/` directory.
 

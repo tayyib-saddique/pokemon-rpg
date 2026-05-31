@@ -5,12 +5,17 @@ from entities.player import Player
 from entities.enemy import Enemy
 
 from config.moves import MOVE_CLASSES
-from config.world import MAPS
+from config.world import MAPS, get_connection
 from config.settings import SCALE
 
 from ui.hud import HUD
 from world.camera import CameraGroup
-from world.map import flatten_layers, collect_base_positions, build_sprites
+from world.map import (
+    flatten_layers,
+    collect_base_positions,
+    collect_building_foot_depths,
+    build_sprites,
+)
 from world.pathfinding import NavGrid
 
 
@@ -63,17 +68,16 @@ class Level:
 
         layers = flatten_layers(tmx.layers)
 
-        tree_base_positions, building_base_positions, town_positions = (
-            collect_base_positions(layers, tile_h)
-        )
+        tree_base_positions, town_positions = collect_base_positions(layers, tile_h)
+        building_foot_depths = collect_building_foot_depths(layers, tile_h)
 
         self.door_rects = build_sprites(
             layers=layers,
             tile_w=tile_w,
             tile_h=tile_h,
             tree_base_positions=tree_base_positions,
-            building_base_positions=building_base_positions,
             town_positions=town_positions,
+            building_foot_depths=building_foot_depths,
             map_height=self.map_height,
             all_sprites=self.all_sprites,
             collision_sprites=self.collision_sprites,
@@ -106,7 +110,7 @@ class Level:
                 map_size=(self.map_width, self.map_height),
                 tier=spawn.get("tier", 1),
                 is_boss=spawn.get("boss", False),
-                nav_grid=self.nav_grid,  # ✅ critical
+                nav_grid=self.nav_grid,
             )
             self.combat_sprites.add(enemy)
 
@@ -199,7 +203,6 @@ class Level:
         if self._check_door_transition():
             return
 
-        connections = MAPS[self.map_name]["connections"]
         p = self.player
 
         hw = p.hitbox.width // 2
@@ -214,8 +217,9 @@ class Level:
         ]
 
         for condition, edge in checks:
-            if condition and connections.get(edge):
-                self.pending_transition = (edge, connections[edge])
+            connection = get_connection(self.map_name, edge)
+            if condition and connection:
+                self.pending_transition = (edge, connection)
                 break
 
     def _check_door_transition(self) -> bool:
@@ -228,8 +232,6 @@ class Level:
         if self.player.hitbox.collidelist(self.door_rects) == -1:
             return False
 
-        # Destinations aren't wired up yet — fire the transition with a
-        # None target so main.py fades but skips the map swap.
         self.pending_transition = ("door", None)
         return True
 

@@ -1,15 +1,3 @@
-"""
-Animator — handles frame advancement, attack speed, trigger detection,
-and loop completion for sprite animations.
-
-Usage:
-    self.animator = Animator(self.animations)
-    result = self.animator.update(status, dt)
-    self.image = result.image
-    if result.triggered: ...
-    if result.finished: ...
-"""
-
 from dataclasses import dataclass
 from typing import Any
 

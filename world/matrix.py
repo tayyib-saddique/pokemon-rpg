@@ -1,8 +1,3 @@
-"""
-Converts world collision sprites into a grid-based matrix for AI systems.
-"""
-
-
 def world_to_grid(pos, tile_size):
     return int(pos[0] // tile_size), int(pos[1] // tile_size)
 

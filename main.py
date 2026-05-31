@@ -1,16 +1,16 @@
-import pygame
 import sys
-import pytmx
-from config.settings import WIDTH, HEIGHT
-from world.level import Level
+
+import pygame
+
+from config.settings import HEIGHT, WIDTH
 from ui.transition import FadeTransition
-from config.world import ENTRY_POSITIONS
-from config.settings import SCALE
+from world.level import Level
 
 
 GAME_OVER_OVERLAY = (0, 0, 0, 160)
 START_MAP = "vertia_city"
 START_POS = (500, 500)
+DOOR_RETRIGGER_COOLDOWN_MS = 1500
 
 
 class Game:
@@ -25,34 +25,23 @@ class Game:
         self._font_large = pygame.font.SysFont("monospace", 48, bold=True)
         self._font_small = pygame.font.SysFont("monospace", 20)
 
-    def _do_transition(self, edge, map_name):
-        old_player = self.level.player
+    def _do_transition(self, edge, connection):
         self.level.player.frozen = True
 
-        if edge == "door" and map_name is None:
-            # Doors don't lead anywhere yet — fade, then unfreeze on the
-            # same map and cool down the door check so we don't retrigger.
+        if edge == "door" and connection is None:
             self.transition.start(self._end_dead_door_transition)
             return
 
-        self.transition.start(lambda: self._swap_map(edge, map_name, old_player))
+        self.transition.start(lambda: self._swap_map(connection))
 
     def _end_dead_door_transition(self):
         self.level.player.frozen = False
-        self.level.door_cooldown_until = pygame.time.get_ticks() + 1500
-
-    def _swap_map(self, edge, map_name, old_player):
-        tmx_data = pytmx.load_pygame(f"assets/floor_maps/{map_name}.tmx")
-        map_w = tmx_data.width * tmx_data.tilewidth * SCALE
-        map_h = tmx_data.height * tmx_data.tileheight * SCALE
-
-        new_pos = ENTRY_POSITIONS[edge](old_player, map_w, map_h)
-        self.level = Level(map_name, player_pos=new_pos)
-        new_pos = ENTRY_POSITIONS[edge](
-            old_player, self.level.map_width, self.level.map_height
+        self.level.door_cooldown_until = (
+            pygame.time.get_ticks() + DOOR_RETRIGGER_COOLDOWN_MS
         )
-        self.level.player.rect.center = new_pos
-        self.level.player.hitbox.center = new_pos
+
+    def _swap_map(self, connection):
+        self.level = Level(connection["map"], player_pos=connection["entry_pos"])
 
     def _restart(self):
         self.level = Level(START_MAP, START_POS)
@@ -92,9 +81,9 @@ class Game:
                 self._draw_game_over()
 
             if self.level.pending_transition and not self.transition.active:
-                edge, map_name = self.level.pending_transition
+                edge, connection = self.level.pending_transition
                 self.level.pending_transition = None
-                self._do_transition(edge, map_name)
+                self._do_transition(edge, connection)
 
             self.transition.update(dt)
             self.transition.draw(self.screen)
