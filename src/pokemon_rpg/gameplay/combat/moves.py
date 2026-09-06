@@ -1,6 +1,6 @@
-from projectiles.bubble_beam import BubbleBeam
-from projectiles.flamethrower import Flamethrower
-from projectiles.ember import Ember
+from pokemon_rpg.gameplay.combat.projectiles.bubble_beam import BubbleBeam
+from pokemon_rpg.gameplay.combat.projectiles.ember import Ember
+from pokemon_rpg.gameplay.combat.projectiles.flamethrower import Flamethrower
 
 MOVE_CLASSES = {
     "bubble_beam": BubbleBeam,

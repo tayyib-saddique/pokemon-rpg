@@ -1,13 +1,30 @@
 [project]
-name = "pydew-valley"
+name = "pokemon-rpg"
 version = "0.1.0"
-description = "Add your description here"
+description = "A real-time Pokémon-inspired RPG built with Pygame"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "dataclasses>=0.8",
     "pathfinding>=1.0.20",
     "pygame>=2.6.1",
     "pytmx>=3.32",
+]
+
+[project.scripts]
+pokemon-rpg = "pokemon_rpg.app:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
     "ruff>=0.15.12",
 ]
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

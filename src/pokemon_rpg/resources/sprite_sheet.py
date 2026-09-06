@@ -1,8 +1,7 @@
 import pygame
 
 
-def load_pmd_sheet(path, frame_w, frame_h):
-    sheet = pygame.image.load(path).convert_alpha()
+def load_pmd_sheet(sheet, frame_w, frame_h):
     cols = sheet.get_width() // frame_w
 
     directions = [

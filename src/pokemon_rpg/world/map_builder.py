@@ -1,7 +1,8 @@
 import pygame
 import pytmx
-from entities.sprite import Generic
-from world.depth import get_depth_value, tile_depth
+
+from pokemon_rpg.gameplay.entities.base import Generic
+from pokemon_rpg.world.depth import get_depth_value, tile_depth
 
 
 def flatten_layers(layers: list) -> list:
@@ -189,13 +190,3 @@ def build_sprites(
                 door_rects.append(trigger)
 
     return door_rects
-
-
-def build_collision_matrix_from_tmx(layer, cols, rows):
-    grid = [[0 for _ in range(cols)] for _ in range(rows)]
-
-    for x, y, gid in layer.tiles():
-        if gid != 0:
-            grid[y][x] = 1
-
-    return grid

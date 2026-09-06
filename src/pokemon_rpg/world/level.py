@@ -1,22 +1,20 @@
 import pygame
-import pytmx
 
-from entities.player import Player
-from entities.enemy import Enemy
-
-from config.moves import MOVE_CLASSES
-from config.world import MAPS, get_connection
-from config.settings import SCALE
-
-from ui.hud import HUD
-from world.camera import CameraGroup
-from world.map import (
+from pokemon_rpg.data.world import MAPS, get_connection
+from pokemon_rpg.gameplay.combat.moves import MOVE_CLASSES
+from pokemon_rpg.gameplay.entities.enemy import Enemy
+from pokemon_rpg.gameplay.entities.player import Player
+from pokemon_rpg.rendering.camera import CameraGroup
+from pokemon_rpg.rendering.hud import HUD
+from pokemon_rpg.resources.map_repository import load_map
+from pokemon_rpg.settings import SCALE
+from pokemon_rpg.world.map_builder import (
     flatten_layers,
     collect_base_positions,
     collect_building_foot_depths,
     build_sprites,
 )
-from world.pathfinding import NavGrid
+from pokemon_rpg.world.navigation import NavGrid
 
 
 FILL_COLOUR = (60, 55, 65)
@@ -44,9 +42,7 @@ class Level:
 
     # Setup
     def _setup_map(self, player_pos):
-        tmx = pytmx.load_pygame(
-            f"assets/floor_maps/{self.map_name}.tmx", pixelalpha=True
-        )
+        tmx = load_map(self.map_name)
 
         self.map_width = tmx.width * tmx.tilewidth * SCALE
         self.map_height = tmx.height * tmx.tileheight * SCALE

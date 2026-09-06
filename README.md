@@ -10,19 +10,20 @@ Python-based Pokémon RPG game built with Pygame, inspired by the mechanics of P
 
 ## Project Structure
 ```
-├── config/            # game settings, Pokémon move/sprite data, world/map registry
-├── entities/          # player, enemy, and generic tile sprite classes
-├── world/             # level orchestration, camera, map building, pathfinding
-├── ui/                # HUD and screen transitions
-├── projectiles/       # AI-optimised projectiles
-├── utils/             # helper functions
-├── assets/            # tilesets and Pokémon sprite sheets
-├── tests/             # stress-tests
-└── main.py            # Main game loop and entry point
+├── src/pokemon_rpg/
+│   ├── app.py                 # main game loop
+│   ├── data/                  # Pokémon and world registries
+│   ├── gameplay/              # entities, combat, moves, and projectiles
+│   ├── rendering/             # animation, camera, HUD, and transitions
+│   ├── resources/             # controlled asset and map loading
+│   └── world/                 # level, map building, and navigation
+├── assets/                    # maps and Pokémon sprite sheets
+├── benchmarks/                # interactive performance harnesses
+└── tests/                     # automated regression suite
 ```
 
 ## Requirements and installation
-This project requires **Python 3.10+** and the **uv** package manager.
+This project requires **Python 3.11+** and the **uv** package manager.
 
 1. Clone the repository
 ```
@@ -35,7 +36,21 @@ uv sync
 ```
 3. Launch the game
 ```
-uv run main.py
+uv run pokemon-rpg
+```
+
+## Tests
+
+Run the automated regression suite with pytest:
+
+```
+uv run pytest
+```
+
+The interactive projectile stress harness remains available separately:
+
+```
+uv run python benchmarks/bubble_beam.py
 ```
 
 ## Gameplay Preview

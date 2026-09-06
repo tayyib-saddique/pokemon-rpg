@@ -1,7 +1,9 @@
-import pygame
 import math
 import random
-from projectiles.base import BaseProjectile
+
+import pygame
+
+from pokemon_rpg.gameplay.combat.projectiles.base import BaseProjectile
 
 C_WHITE = (255, 255, 220)
 C_YELLOW = (255, 235, 30)

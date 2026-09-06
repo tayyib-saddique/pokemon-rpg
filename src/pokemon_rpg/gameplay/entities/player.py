@@ -1,10 +1,11 @@
 import pygame
-from config.moves import MOVE_CLASSES, POKEMON_MOVES
-from config.sprite_sheets import SPRITE_SHEETS
-from utils.assets import load_pokemon_animations
-from utils.animator import Animator
-from utils.direction import direction_name
-from utils.health import Health
+
+from pokemon_rpg.data.pokemon import SPRITE_SHEETS
+from pokemon_rpg.gameplay.combat.health import Health
+from pokemon_rpg.gameplay.combat.moves import MOVE_CLASSES, POKEMON_MOVES
+from pokemon_rpg.gameplay.direction import direction_name
+from pokemon_rpg.rendering.animation import Animator
+from pokemon_rpg.resources.asset_store import load_pokemon_animations
 
 
 class Player(pygame.sprite.Sprite):
