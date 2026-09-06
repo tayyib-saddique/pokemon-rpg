@@ -1,7 +1,8 @@
 from typing import List, Tuple, Any
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
-from world.matrix import build_collision_matrix
+
+from pokemon_rpg.world.matrix import build_collision_matrix
 
 WorldPos = Tuple[float, float]
 GridPos = Tuple[int, int]
@@ -37,6 +38,9 @@ class NavGrid:
 
     # matrix
     def clamp_to_walkable(self, grid, gx, gy):
+        gx = min(max(gx, 0), self.cols - 1)
+        gy = min(max(gy, 0), self.rows - 1)
+
         if grid[gy][gx] == 1:
             return gx, gy
 
@@ -63,9 +67,6 @@ class NavGrid:
 
         start = self.clamp_to_walkable(matrix, *start)
         goal = self.clamp_to_walkable(matrix, *goal)
-
-        walkable = sum(cell == 1 for row in matrix for cell in row)
-        blocked = sum(cell == 0 for row in matrix for cell in row)
 
         grid = Grid(matrix=matrix)
 

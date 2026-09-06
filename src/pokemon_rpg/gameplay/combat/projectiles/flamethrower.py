@@ -1,7 +1,9 @@
-import pygame
 import math
 import random
-from projectiles.base import BaseProjectile
+
+import pygame
+
+from pokemon_rpg.gameplay.combat.projectiles.base import BaseProjectile
 
 C_CORE = (239, 235, 166)
 C_MID = (248, 166, 104)

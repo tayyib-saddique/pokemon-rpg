@@ -2,9 +2,9 @@ import sys
 
 import pygame
 
-from config.settings import HEIGHT, WIDTH
-from ui.transition import FadeTransition
-from world.level import Level
+from pokemon_rpg.rendering.transition import FadeTransition
+from pokemon_rpg.settings import HEIGHT, WIDTH
+from pokemon_rpg.world.level import Level
 
 
 GAME_OVER_OVERLAY = (0, 0, 0, 160)
@@ -90,6 +90,10 @@ class Game:
             pygame.display.flip()
 
 
-if __name__ == "__main__":
+def main():
     game = Game()
     game.run()
+
+
+if __name__ == "__main__":
+    main()

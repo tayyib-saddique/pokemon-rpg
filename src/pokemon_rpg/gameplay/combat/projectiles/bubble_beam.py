@@ -1,7 +1,9 @@
-import pygame
 import math
 import random
-from projectiles.base import BaseProjectile
+
+import pygame
+
+from pokemon_rpg.gameplay.combat.projectiles.base import BaseProjectile
 
 B_RIM = (160, 220, 255)
 B_SHINE = (230, 248, 255)
