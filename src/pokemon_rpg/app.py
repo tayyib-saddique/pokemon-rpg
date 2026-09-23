@@ -42,6 +42,9 @@ class Game:
 
     def _swap_map(self, connection):
         self.level = Level(connection["map"], player_pos=connection["entry_pos"])
+        self.level.door_cooldown_until = (
+            pygame.time.get_ticks() + DOOR_RETRIGGER_COOLDOWN_MS
+        )
 
     def _restart(self):
         self.level = Level(START_MAP, START_POS)

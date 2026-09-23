@@ -193,7 +193,7 @@ class Level:
 
     # Transitions
     def _check_transition(self):
-        if self.pending_transition:
+        if self.pending_transition or self.player.frozen:
             return
 
         if self._check_door_transition():

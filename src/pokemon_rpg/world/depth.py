@@ -43,8 +43,23 @@ def tile_depth(
         # the top of its southernmost blocking row: the front/base line.
         return building_foot_depths.get((x, y), get_depth_value(y, tile_h))
 
+    if "Town Overlay" in layer_name:
+        # Overlay decorations (sign tops, awnings, etc.) sort IN FRONT of any
+        # building tile they cover: nudge just past the building's foot depth.
+        depth = find_anchor_depth(x, y, town_positions, fallback)
+        building = building_foot_depths.get((x, y))
+        if building is not None:
+            return max(depth, building + 1)
+        return depth
+
     if "Town" in layer_name:
-        return find_anchor_depth(x, y, town_positions, fallback)
+        # Town Base decorations sort BEHIND any building tile they cover: clamp
+        # just under the building's foot depth.
+        depth = find_anchor_depth(x, y, town_positions, fallback)
+        building = building_foot_depths.get((x, y))
+        if building is not None:
+            return min(depth, building - 1)
+        return depth
 
     if "Door" in layer_name:
         # Doors sit at the building's foot; nudge +1 so they render just above
