@@ -175,6 +175,8 @@ def build_sprites(
         if not isinstance(layer, pytmx.TiledTileLayer):
             continue
 
+        layer_cells = {(x, y) for x, y, image in layer.tiles() if image}
+
         for x, y, image in layer.tiles():
             if not image:
                 continue
@@ -202,6 +204,7 @@ def build_sprites(
                 building_foot_depths=building_foot_depths,
                 fallback=map_height + 100,
                 town_foot_positions=town_foot_positions,
+                layer_cells=layer_cells,
             )
 
             if "Door" in layer.name:

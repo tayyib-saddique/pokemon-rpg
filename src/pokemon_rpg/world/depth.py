@@ -1,3 +1,7 @@
+# Sorts before every actor: flat ground decoration the player always walks over.
+GROUND_DEPTH = -1
+
+
 def get_depth_value(tile_y: int, tile_h: int) -> int:
     """World-pixel Y at 3/4 down a tile, used as the depth sort anchor."""
     return tile_y * tile_h + tile_h * 3 // 4
@@ -9,6 +13,7 @@ def find_anchor_depth(
     anchor_positions: dict,
     fallback: int,
     foot_positions: set | None = None,
+    layer_cells: set | None = None,
 ) -> int:
     """
     Walk downward (trying adjacent columns for diagonal robustness) and
@@ -16,25 +21,32 @@ def find_anchor_depth(
     anchor tiles. Used so an overlay tile (Tree Tips/Mid, Town Overlay)
     sorts at the depth of its object's foot.
 
-    When foot_positions is given, only tiles in it can be the foot; a run
-    without any (e.g. a stack of loose flowers) anchors at its top tile.
+    When foot_positions is given, only tiles in it can be the foot. Adjacent
+    columns are then only searched where the tile's own layer continues
+    sideways (a wide prop whose collision sits under one column), and a tile
+    with no foot anywhere (loose flowers, grass) returns GROUND_DEPTH.
     """
+    found_run = False
     for dx in [0, -1, 1, -2, 2]:
-        top_row = None
+        if foot_positions is not None and dx != 0:
+            step = 1 if dx > 0 else -1
+            between = range(step, dx + step, step)
+            if any((tile_x + i, tile_y) not in (layer_cells or ()) for i in between):
+                continue
+        in_run = False
         bottom_row = None
         for row in range(tile_y, tile_y + 15):
             cell = (tile_x + dx, row)
             if cell in anchor_positions:
-                if top_row is None:
-                    top_row = row
+                in_run = True
                 if foot_positions is None or cell in foot_positions:
                     bottom_row = row
-            elif top_row is not None:
+            elif in_run:
                 break
-        if top_row is not None:
-            row = bottom_row if bottom_row is not None else top_row
-            return anchor_positions[(tile_x + dx, row)]
-    return fallback
+        if bottom_row is not None:
+            return anchor_positions[(tile_x + dx, bottom_row)]
+        found_run = found_run or in_run
+    return GROUND_DEPTH if found_run else fallback
 
 
 def tile_depth(
@@ -47,6 +59,7 @@ def tile_depth(
     building_foot_depths: dict,
     fallback: int,
     town_foot_positions: set | None = None,
+    layer_cells: set | None = None,
 ) -> int:
     """Return the correct depth sort value for a tile based on its layer."""
     if "Tree Tips" in layer_name or "Tree Mid" in layer_name:
@@ -60,7 +73,9 @@ def tile_depth(
     if "Town Overlay" in layer_name:
         # Overlay decorations (sign tops, awnings, etc.) sort IN FRONT of any
         # building tile they cover: nudge just past the building's foot depth.
-        depth = find_anchor_depth(x, y, town_positions, fallback, town_foot_positions)
+        depth = find_anchor_depth(
+            x, y, town_positions, fallback, town_foot_positions, layer_cells
+        )
         building = building_foot_depths.get((x, y))
         if building is not None:
             return max(depth, building + 1)
@@ -69,7 +84,9 @@ def tile_depth(
     if "Town" in layer_name:
         # Town Base decorations sort BEHIND any building tile they cover: clamp
         # just under the building's foot depth.
-        depth = find_anchor_depth(x, y, town_positions, fallback, town_foot_positions)
+        depth = find_anchor_depth(
+            x, y, town_positions, fallback, town_foot_positions, layer_cells
+        )
         building = building_foot_depths.get((x, y))
         if building is not None:
             return min(depth, building - 1)
