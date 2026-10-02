@@ -12,7 +12,7 @@ MAPS = {
             "north": None,
             "south": None,
             "east": None,
-            "west": map_connection("vertia_city", (2817, 568)),
+            "west": map_connection("vertia_city", (2817, 1231)),
         },
         "enemy_spawns": [
             {
