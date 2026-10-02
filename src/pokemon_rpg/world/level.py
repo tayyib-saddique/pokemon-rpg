@@ -64,7 +64,9 @@ class Level:
 
         layers = flatten_layers(tmx.layers)
 
-        tree_base_positions, town_positions = collect_base_positions(layers, tile_h)
+        tree_base_positions, town_positions, town_foot_positions = (
+            collect_base_positions(layers, tile_h)
+        )
         building_foot_depths = collect_building_foot_depths(layers, tile_h)
 
         self.door_rects = build_sprites(
@@ -73,6 +75,7 @@ class Level:
             tile_h=tile_h,
             tree_base_positions=tree_base_positions,
             town_positions=town_positions,
+            town_foot_positions=town_foot_positions,
             building_foot_depths=building_foot_depths,
             map_height=self.map_height,
             all_sprites=self.all_sprites,
