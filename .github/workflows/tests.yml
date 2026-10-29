@@ -8,10 +8,11 @@ on:
   pull_request:
     paths-ignore: ["**.md", "docs/**"]
 
-# A newer push to the same branch cancels the run still going, so stale runs don't use up minutes.
+# A newer push to a PR cancels the run still going, so stale runs don't use up minutes.
+# Runs on main are never cancelled, so every commit there gets a result.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -20,9 +21,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # The runner has no screen or sound card, so pygame needs SDL's stand-in drivers.
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7.0.1
+      # setup-uv has no major-version tags (like @v10) from v8 on, so it's pinned to a full release.
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           python-version: "3.11"
           enable-cache: true
@@ -33,8 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           python-version: "3.11"
           enable-cache: true
