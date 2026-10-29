@@ -160,32 +160,31 @@ class Ember(BaseProjectile):
         self.rect = pygame.Rect(0, 0, 30, 30)
         self.rect.center = self.pos
 
+    def on_deactivate(self):
+        self.impact()
+
     def impact(self):
         if not self._exploded:
             self._exploded = True
-            self.active = False
             for i in range(self.BURST_COUNT):
                 self.burst.append(
                     BurstShard(self.pos.x, self.pos.y, self._dir, i, self.BURST_COUNT)
                 )
 
-    def update(self, dt, *args, **kwargs):
+    def _advance(self, dt):
+        # Pixel physics: gravity gives ember a falling arc
+        self.velocity.y += GRAVITY * dt
+        super()._advance(dt)
+
+    def update_effects(self, dt):
         if not self._exploded:
-            # Pixel physics: gravity gives ember a falling arc
-            self.velocity.y += GRAVITY * dt
-
-            super().update(dt)
-            self.rect.center = self.pos
-
             self._age += dt
             for hs in self.head_shards:
                 hs.update(dt)
             self._trail_t += dt
-            if self._trail_t >= self.TRAIL_INTERVAL:
-                self._trail_t = 0.0
+            while self._trail_t >= self.TRAIL_INTERVAL:
+                self._trail_t -= self.TRAIL_INTERVAL
                 self._deposit_trail()
-            if not self.active:
-                self.impact()
 
         for ts in self.trail:
             ts.update(dt)
@@ -193,6 +192,9 @@ class Ember(BaseProjectile):
             bs.update(dt)
         self.trail = [ts for ts in self.trail if ts.active]
         self.burst = [bs for bs in self.burst if bs.active]
+
+    def has_effects(self):
+        return bool(self.trail or self.burst)
 
     def _deposit_trail(self):
         for _ in range(random.randint(2, 3)):

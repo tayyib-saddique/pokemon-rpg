@@ -14,10 +14,17 @@ FACING_VELOCITY = {
 _UP_FACINGS = {"up", "up_left", "up_right"}
 
 
+def hit_rect(sprite):
+    """The rect damage is tested against: hitbox if the sprite has one."""
+    return getattr(sprite, "hitbox", sprite.rect)
+
+
 class BaseProjectile(pygame.sprite.Sprite):
     MAX_RANGE = 400
     # seconds the caster freezes when projectile is fired; overrided per subclass
     FREEZE_DURATION = 0.10
+    # TODO: replace flat damage with formula (type effectiveness, attack/defence stats)
+    DAMAGE = 10
 
     def __init__(
         self,
@@ -43,8 +50,11 @@ class BaseProjectile(pygame.sprite.Sprite):
         if self.velocity.length() > 0:
             self.velocity = self.velocity.normalize() * speed
 
-        self.collision_sprites = collision_sprites
-        self.combat_sprites = combat_sprites
+        self.collision_sprites = collision_sprites or []
+        self.combat_sprites = combat_sprites or []
+        # active = the projectile can still move and hit things. Once inactive
+        # it stays in its sprite groups until has_effects() is False, so
+        # trails and impact bursts can finish playing.
         self.active = True
         self.map_width, self.map_height = map_size
         self.max_range = max_range
@@ -61,9 +71,14 @@ class BaseProjectile(pygame.sprite.Sprite):
         self._spawn_ignore = None
 
     def update(self, dt, *args, **kwargs):
-        if not self.active:
-            return
+        if self.active:
+            self._advance(dt)
+        self.update_effects(dt)
+        if not self.active and not self.has_effects():
+            self.kill()
 
+    def _advance(self, dt):
+        """Move and resolve collisions. Only called while active."""
         self.pos += self.velocity * dt
 
         if hasattr(self, "rect"):
@@ -75,42 +90,67 @@ class BaseProjectile(pygame.sprite.Sprite):
             hitbox.center = self.rect.center
 
             if self._spawn_ignore is None:
+                # Only ignore walls clipped from the side or behind; a wall
+                # directly ahead (firing point-blank) must still block.
                 self._spawn_ignore = {
-                    id(s)
-                    for s in (self.collision_sprites or [])
-                    if hitbox.colliderect(s.rect)
+                    s
+                    for s in self.collision_sprites
+                    if hitbox.colliderect(s.rect) and not self._is_ahead(hitbox, s.rect)
                 }
 
-            if self.collision_sprites:
-                for sprite in self.collision_sprites:
-                    overlapping = hitbox.colliderect(sprite.rect)
-                    if id(sprite) in self._spawn_ignore:
-                        if not overlapping:
-                            self._spawn_ignore.discard(id(sprite))
-                        continue
-                    if overlapping:
-                        self.on_collision()
-                        self.active = False
-                        self.kill()
-                        return
+            for sprite in self.collision_sprites:
+                overlapping = hitbox.colliderect(sprite.rect)
+                if sprite in self._spawn_ignore:
+                    if not overlapping:
+                        self._spawn_ignore.discard(sprite)
+                    continue
+                if overlapping:
+                    self.on_collision()
+                    self._deactivate()
+                    return
 
-            if self.combat_sprites:
-                for sprite in self.combat_sprites:
-                    if hitbox.colliderect(sprite.rect):
-                        self.on_hit(sprite)
-                        self.active = False
-                        self.kill()
-                        return
+            for sprite in self.combat_sprites:
+                if hitbox.colliderect(hit_rect(sprite)):
+                    self.on_hit(sprite)
+                    self._deactivate()
+                    return
 
         if self._origin.distance_to(self.pos) > self.max_range:
-            self.active = False
-            self.kill()
+            self._deactivate()
+            return
 
         if not (
             0 <= self.pos.x <= self.map_width and 0 <= self.pos.y <= self.map_height
         ):
+            self._deactivate()
+
+    def _is_ahead(self, hitbox, wall_rect):
+        """True if the overlap with wall_rect sits on the leading edge of travel."""
+        if self.velocity.length_squared() == 0:
+            return True
+        overlap = hitbox.clip(wall_rect)
+        offset = pygame.math.Vector2(overlap.center) - hitbox.center
+        d = self.velocity.normalize()
+        along = offset.dot(d)
+        lateral = abs(offset.x * d.y - offset.y * d.x)
+        return along > lateral
+
+    def _deactivate(self):
+        if self.active:
             self.active = False
-            self.kill()
+            self.on_deactivate()
+
+    def update_effects(self, dt):
+        """Advance particles/trails. Called every frame, active or not."""
+        pass
+
+    def has_effects(self):
+        """True while visual effects are still playing after deactivation."""
+        return False
+
+    def on_deactivate(self):
+        """Called once when the projectile stops (hit, wall, range or map edge)."""
+        pass
 
     def on_collision(self):
         """Override this in subclasses for explosion animations or sounds."""
@@ -118,11 +158,16 @@ class BaseProjectile(pygame.sprite.Sprite):
 
     def on_hit(self, target):
         """Called when the projectile hits a combat sprite. Override to deal damage."""
-        # TODO: replace flat damage with formula (type effectiveness, attack/defence stats)
         if hasattr(target, "take_damage"):
-            target.take_damage(10)
+            # Shots from one volley share a source so they can all land inside
+            # the invincibility window the first shot starts
+            source = getattr(self, "volley", None)
+            if source is None:
+                target.take_damage(self.DAMAGE)
+            else:
+                target.take_damage(self.DAMAGE, source=source)
         elif hasattr(target, "health"):
-            target.health.take_damage(10)
+            target.health.take_damage(self.DAMAGE)
 
     def draw(self, surface, offset=(0, 0)):
         raise NotImplementedError("Subclasses must implement draw method")

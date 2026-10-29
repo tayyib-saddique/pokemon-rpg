@@ -4,6 +4,7 @@ from pokemon_rpg.data.pokemon import SPRITE_SHEETS
 from pokemon_rpg.gameplay.combat.health import Health
 from pokemon_rpg.gameplay.combat.moves import MOVE_CLASSES, POKEMON_MOVES
 from pokemon_rpg.gameplay.direction import direction_name
+from pokemon_rpg.gameplay.entities.base import make_hitbox
 from pokemon_rpg.rendering.animation import Animator
 from pokemon_rpg.resources.asset_store import load_pokemon_animations
 
@@ -33,6 +34,7 @@ class Player(pygame.sprite.Sprite):
         self.frozen = False
         self.dead = False
         self.invincible_timer = 0.0
+        self._iframe_source = None
 
         #  Animation
         self.animations = load_pokemon_animations(pokemon)
@@ -41,7 +43,7 @@ class Player(pygame.sprite.Sprite):
 
         self.image = self.animations[self.status][0]
         self.rect = self.image.get_rect(center=pos)
-        self.hitbox = self.rect.inflate(-self.rect.width // 2, -self.rect.height // 2)
+        self.hitbox = make_hitbox(pokemon, self.rect)
 
         #  Movement
         self.direction = pygame.math.Vector2()
@@ -225,11 +227,17 @@ class Player(pygame.sprite.Sprite):
             self.pos.update(self.rect.center)
             self.hitbox.center = self.rect.center
 
-    def take_damage(self, amount):
-        if self.invincible_timer > 0 or self.dead:
+    def take_damage(self, amount, source=None):
+        if self.dead:
             return
+        if self.invincible_timer > 0:
+            # Only the rest of the volley that started the window gets through
+            if source is None or source is not self._iframe_source:
+                return
+        else:
+            self.invincible_timer = 1.0
+            self._iframe_source = source
         self.health.take_damage(amount)
-        self.invincible_timer = 1.0
         if self.health.is_dead:
             self.dead = True
 

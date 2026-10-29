@@ -28,3 +28,6 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "stress: heavy scenario tests run against every move (deselect with -m \"not stress\")",
+]

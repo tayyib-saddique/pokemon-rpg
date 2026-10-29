@@ -6,6 +6,7 @@ from pokemon_rpg.data.pokemon import SPRITE_SHEETS
 from pokemon_rpg.gameplay.combat.health import Health
 from pokemon_rpg.gameplay.combat.moves import MOVE_CLASSES, POKEMON_MOVES
 from pokemon_rpg.gameplay.direction import direction_name
+from pokemon_rpg.gameplay.entities.base import make_hitbox
 from pokemon_rpg.rendering.animation import Animator
 from pokemon_rpg.resources.asset_store import load_pokemon_animations
 
@@ -71,7 +72,7 @@ class Enemy(pygame.sprite.Sprite):
 
         self.image = self.animations[self.status][0]
         self.rect = self.image.get_rect(center=pos)
-        self.hitbox = self.rect.inflate(-self.rect.width // 2, -self.rect.height // 2)
+        self.hitbox = make_hitbox(pokemon, self.rect)
 
         # Movement
         self.pos = pygame.math.Vector2(self.rect.center)
@@ -120,7 +121,7 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.top + self.rect.height * fy,
         )
 
-    def take_damage(self, amount):
+    def take_damage(self, amount, source=None):
         # TODO: replace flat damage with formula (type effectiveness, attack/defence stats)
         self.health.take_damage(amount)
         self.hit_timer = self.HIT_JITTER_DURATION

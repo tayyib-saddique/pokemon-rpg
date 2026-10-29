@@ -47,7 +47,34 @@ Run the automated regression suite with pytest:
 uv run pytest
 ```
 
-The interactive projectile stress harness remains available separately:
+The suite includes stress tests that push every move through hostile
+conditions (frame spikes, walls, crowds, map edges). Skip them for a quick run:
+
+```
+uv run pytest -m "not stress"
+```
+
+## Benchmarks
+
+Benchmark every move: each one is cast on repeat by a crowd of Pokemon in a
+window you can watch, while per-frame update/draw cost, peak effects and share
+of the 60 fps budget are printed to the terminal (SPACE skips a run, ESC stops).
+Save a run and compare a later one against it, or run without a window:
+
+```
+uv run python benchmarks/moves.py
+uv run python benchmarks/moves.py --json before.json
+uv run python benchmarks/moves.py --baseline before.json
+uv run python benchmarks/moves.py --headless
+```
+
+Fire moves by hand in an interactive harness with live timings:
+
+```
+uv run python benchmarks/moves.py --interactive
+```
+
+The original Bubble Beam harness remains available separately:
 
 ```
 uv run python benchmarks/bubble_beam.py

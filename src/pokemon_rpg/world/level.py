@@ -35,8 +35,6 @@ class Level:
         self.combat_sprites = pygame.sprite.Group()
         self.player_sprites = pygame.sprite.Group()
 
-        self.projectiles = []
-
         self._setup_map(player_pos)
         self.hud = HUD()
 
@@ -87,7 +85,7 @@ class Level:
             pos=player_pos,
             group=self.all_sprites,
             create_projectile_callback=self.spawn_projectile,
-            pokemon="totodile",
+            pokemon="bulbasaur",
             map_size=(self.map_width, self.map_height),
             collision_sprites=self.collision_sprites,
         )
@@ -123,15 +121,12 @@ class Level:
             pos[0],
             pos[1],
             facing,
+            map_size=(self.map_width, self.map_height),
             collision_sprites=self.collision_sprites,
             combat_sprites=self.player_sprites,
         )
 
-        p.MAP_WIDTH = self.map_width
-        p.MAP_HEIGHT = self.map_height
-
         self.all_sprites.add(p)
-        self.projectiles.append(p)
 
     def spawn_projectile(self, pos, facing, move_type):
         move_class = MOVE_CLASSES.get(move_type)
@@ -142,16 +137,12 @@ class Level:
             pos[0],
             pos[1],
             facing,
+            map_size=(self.map_width, self.map_height),
             collision_sprites=self.collision_sprites,
             combat_sprites=self.combat_sprites,
         )
 
-        p.ground_y = self.player.ground_y
-        p.MAP_WIDTH = self.map_width
-        p.MAP_HEIGHT = self.map_height
-
         self.all_sprites.add(p)
-        self.projectiles.append(p)
 
     # Collision Safety
     def _resolve_entity_overlaps(self):
@@ -248,7 +239,5 @@ class Level:
         self.all_sprites.draw(self.player)
 
         self.hud.draw(self.player, self.combat_sprites, self.all_sprites.offset)
-
-        self.projectiles = [p for p in self.projectiles if p.active]
 
         self._check_transition()

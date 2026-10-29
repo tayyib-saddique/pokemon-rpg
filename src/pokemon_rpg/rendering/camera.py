@@ -42,19 +42,22 @@ class CameraGroup(pygame.sprite.Group):
         depth_sprites = []
         overlay_sprites = []
 
-        for sprite in self.sprites():
-            if sprite is player:
+        for item in self.sprites():
+            if item is player:
                 continue
-            if getattr(sprite, "overlay", False):
-                overlay_sprites.append(sprite)
-                continue
-            layer = getattr(sprite, "layer_name", "")
-            if "Floor" in layer or "Terrain" in layer:
-                floor_sprites.append(sprite)
-            elif "Shadow" in layer:
-                shadow_sprites.append(sprite)
-            else:
-                depth_sprites.append(sprite)
+            # Composite sprites (e.g. projectile volleys) sort each part alone
+            parts = getattr(item, "depth_parts", None)
+            for sprite in parts() if parts else (item,):
+                if getattr(sprite, "overlay", False):
+                    overlay_sprites.append(sprite)
+                    continue
+                layer = getattr(sprite, "layer_name", "")
+                if "Floor" in layer or "Terrain" in layer:
+                    floor_sprites.append(sprite)
+                elif "Shadow" in layer:
+                    shadow_sprites.append(sprite)
+                else:
+                    depth_sprites.append(sprite)
 
         return floor_sprites, shadow_sprites, depth_sprites, overlay_sprites
 

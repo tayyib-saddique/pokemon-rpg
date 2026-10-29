@@ -3,7 +3,7 @@ import random
 
 import pygame
 
-from pokemon_rpg.gameplay.combat.projectiles.base import BaseProjectile
+from pokemon_rpg.gameplay.combat.projectiles.base import BaseProjectile, hit_rect
 
 C_CORE = (239, 235, 166)
 C_MID = (248, 166, 104)
@@ -46,9 +46,10 @@ class JetParticle:
         # Heavy lift so the huge fireball rises at the end
         self.lift = random.uniform(-20, -60)
 
-    @property
-    def color_stage(self):
-        """Returns 1 (Core), 2 (Mid), or 3 (Outer) based on age."""
+        self.color_stage = 1
+
+    def _roll_color_stage(self):
+        """1 (Core), 2 (Mid), or 3 (Outer) based on age, with a little flicker."""
         t = self.life / self.max_life
         flicker = random.uniform(-0.05, 0.05)
         if t > _YELLOW_THRESHOLD + flicker:
@@ -71,6 +72,7 @@ class JetParticle:
         self.x += (self.vx + self.exp_vx * exp_curve) * dt
         self.y += (self.vy + self.exp_vy * exp_curve + self.lift * age) * dt
         self.life -= dt
+        self.color_stage = self._roll_color_stage()
 
     @property
     def active(self):
@@ -116,9 +118,17 @@ class EdgeSpark:
 
 
 class Flamethrower(BaseProjectile):
-    BURST_INTERVAL = 0.008  # Extremely fast burst rate for density
+    # One burst per 60 fps frame — the density the effect was tuned at
+    BURST_INTERVAL = 1 / 60
     PARTICLES_PER_BURST = 6  # High particle count for solid volume
     SPARK_CHANCE = 0.7
+
+    # Continuous stream: damage ticks per target rather than once per hit
+    DAMAGE = 5
+    DAMAGE_TICK = 0.3
+
+    # Generous bound on how far a particle can travel from the nozzle
+    _REACH = 260
 
     _EMIT_DURATION = 1.2  # seconds particles are emitted
     _MAX_PARTICLE_LIFE = 0.75  # upper bound of JetParticle.life
@@ -139,12 +149,26 @@ class Flamethrower(BaseProjectile):
         self._duration = duration
         self._emit_t = 0.0
         self._timer = 0.0
+        self._hit_cooldowns = {}
 
         self.particles: list[JetParticle] = []
         self.sparks: list[EdgeSpark] = []
 
         self.rect = pygame.Rect(0, 0, 20, 20)
         self.rect.center = (self._nx, self._ny)
+
+        # The nozzle never moves, so the walls the flame can reach are fixed.
+        # Walls the nozzle clips from the side are skipped (same rule as
+        # moving projectiles); a wall straight ahead blocks the flame.
+        reach = self.rect.inflate(self._REACH * 2, self._REACH * 2)
+        self._walls = [
+            s.rect
+            for s in self.collision_sprites
+            if reach.colliderect(s.rect)
+            and not (
+                self.rect.colliderect(s.rect) and not self._is_ahead(self.rect, s.rect)
+            )
+        ]
 
     def _burst(self):
         for _ in range(self.PARTICLES_PER_BURST):
@@ -154,34 +178,54 @@ class Flamethrower(BaseProjectile):
         if random.random() < self.SPARK_CHANCE:
             self.sparks.append(EdgeSpark(self._nx, self._ny, self._dir, self._speed))
 
-    def update(self, dt, *args, **kwargs):
-        if hasattr(self, "rect"):
-            # Update rect position to follow origin if firing while moving
-            self.rect.center = (self._nx, self._ny)
-            for sprite in getattr(self, "collision_sprites", []):
-                if self.rect.colliderect(sprite.rect):
-                    self.active = False
-                    return
-
+    def _advance(self, dt):
+        # Stationary emitter: active while it is still emitting
+        self._emit_t += dt
         self._timer += dt
+        while self._timer >= self.BURST_INTERVAL:
+            self._timer -= self.BURST_INTERVAL
+            self._burst()
+        if self._emit_t >= self._duration:
+            self._deactivate()
 
-        if self._emit_t < self._duration:
-            self._emit_t += dt
-            if self._timer >= self.BURST_INTERVAL:
-                self._timer = 0.0
-                self._burst()
-
+    def update_effects(self, dt):
         for p in self.particles:
             p.update(dt)
-
         for sp in self.sparks:
             sp.update(dt)
+
+        if self._walls:
+            probe = pygame.Rect(0, 0, 1, 1)
+            for p in self.particles:
+                probe.topleft = (p.x, p.y)
+                if probe.collidelist(self._walls) != -1:
+                    p.life = 0
+            for sp in self.sparks:
+                probe.topleft = (sp.x, sp.y)
+                if probe.collidelist(self._walls) != -1:
+                    sp.life = 0
 
         self.particles = [p for p in self.particles if p.active]
         self.sparks = [sp for sp in self.sparks if sp.active]
 
-        if self._emit_t >= self._duration and not self.particles and not self.sparks:
-            self.active = False
+        self._damage_targets(dt)
+
+    def _damage_targets(self, dt):
+        for target in list(self._hit_cooldowns):
+            self._hit_cooldowns[target] -= dt
+            if self._hit_cooldowns[target] <= 0:
+                del self._hit_cooldowns[target]
+
+        for target in self.combat_sprites:
+            if target in self._hit_cooldowns:
+                continue
+            box = hit_rect(target)
+            if any(box.collidepoint(p.x, p.y) for p in self.particles):
+                self.on_hit(target)
+                self._hit_cooldowns[target] = self.DAMAGE_TICK
+
+    def has_effects(self):
+        return bool(self.particles or self.sparks)
 
     def draw(self, surface, offset=(0, 0)):
 

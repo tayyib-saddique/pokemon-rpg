@@ -21,6 +21,12 @@ MAPS = {
                 "tier": 1,
                 "boss": False,
             },
+            {
+                "pokemon": "bulbasaur",
+                "pos": (984, 1128),
+                "tier": 1,
+                "boss": False,
+            },
         ],
     },
     "vertia_city": {

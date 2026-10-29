@@ -112,26 +112,32 @@ class BubbleBeam(BaseProjectile):
                 )
             )
 
-    def update(self, dt, *args, **kwargs):
+    def _advance(self, dt):
         # Gravity arc — water beam should curve slightly downward
         self.velocity.y += GRAVITY * dt
+        super()._advance(dt)
 
-        super().update(dt)
-        self.rect.center = self.pos
-
-        self._trail_timer += dt
-        if self._trail_timer >= self.TRAIL_INTERVAL:
-            self._trail_timer = 0.0
-            self._emit()
+    def update_effects(self, dt):
+        if self.active:
+            self._trail_timer += dt
+            while self._trail_timer >= self.TRAIL_INTERVAL:
+                self._trail_timer -= self.TRAIL_INTERVAL
+                self._emit()
 
         for b in self.stream:
             b.update(dt)
         self.stream = [b for b in self.stream if b.active]
 
+    def has_effects(self):
+        return bool(self.stream)
+
     def draw(self, surface, offset=(0, 0)):
         # Stream drawn first (behind head)
         for b in self.stream:
             b.draw(surface, offset)
+
+        if not self.active:
+            return
 
         # Head: two hard pixel circles
         for i, (dx, dy) in enumerate(self.HEAD_OFFSETS):
