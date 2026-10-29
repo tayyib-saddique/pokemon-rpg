@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cache
 
 import pygame
 
@@ -7,7 +7,7 @@ from pokemon_rpg.resources.sprite_sheet import load_pmd_sheet
 from pokemon_rpg.settings import ASSET_ROOT, SCALE
 
 
-@lru_cache(maxsize=None)
+@cache
 def load_pokemon_animations(pokemon: str) -> dict:
     """
     Load and scale all animation frames for a pokemon.

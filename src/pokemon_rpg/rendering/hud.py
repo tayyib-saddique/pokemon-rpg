@@ -25,7 +25,7 @@ class HUD:
             for boss in bosses:
                 self._draw_boss_bar(boss)
 
-        sw, sh = self.surface.get_size()
+        sh = self.surface.get_height()
         x = PADDING
         y = sh - PADDING - BAR_H
 

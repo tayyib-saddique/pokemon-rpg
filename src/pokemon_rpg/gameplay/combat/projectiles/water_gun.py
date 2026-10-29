@@ -78,7 +78,7 @@ class WaterGun(BaseProjectile):
     FREEZE_DURATION = 0.10
 
     # Comet body: (distance behind the head, radius), head first
-    BODY = [(0, 6), (4, 5), (8, 4), (12, 3), (15, 2)]
+    BODY = ((0, 6), (4, 5), (8, 4), (12, 3), (15, 2))
 
     def __init__(self, origin_x, origin_y, facing, **kwargs):
         super().__init__(origin_x, origin_y, facing, speed=520, **kwargs)

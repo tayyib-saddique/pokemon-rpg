@@ -382,8 +382,10 @@ def bench_move(move, casters, args, surface, viewer=None):
                     ("Draw", f"{drw:.2f} ms"),
                     (
                         "Frame",
-                        f"{upd + drw:.2f} ms  "
-                        f"({(upd + drw) / FRAME_BUDGET_MS * 100:.0f}% of {FPS} fps)",
+                        (
+                            f"{upd + drw:.2f} ms  "
+                            f"({(upd + drw) / FRAME_BUDGET_MS * 100:.0f}% of {FPS} fps)"
+                        ),
                     ),
                     "SPACE = skip run   ESC = stop",
                 ],
@@ -608,8 +610,10 @@ def run_interactive(args):
             [
                 (
                     "FPS",
-                    f"{clock.get_fps():5.1f}  "
-                    f"(avg {sum(fps_samples) / len(fps_samples):5.1f})",
+                    (
+                        f"{clock.get_fps():5.1f}  "
+                        f"(avg {sum(fps_samples) / len(fps_samples):5.1f})"
+                    ),
                 ),
                 (
                     "Move",

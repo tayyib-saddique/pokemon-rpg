@@ -16,9 +16,11 @@ Stress metrics shown on screen:
   • Current FPS
 """
 
-import pygame
 import math
 import random
+
+import pygame
+
 from pokemon_rpg.gameplay.entities.player import Player
 from pokemon_rpg.settings import FPS, HEIGHT, WIDTH
 
@@ -132,12 +134,12 @@ class TrailBubble:
 class BubbleBeamProjectile:
     SPEED = 340  # bubbles travel a bit slower than a water jet
     TRAIL_INTERVAL = 0.04  # seconds between spawning trail bubbles
-    HEAD_RADII = [9, 6, 4]  # cluster of 3 bubbles at the head
-    HEAD_OFFSETS = [  # (dx, dy) offsets from centre for each head bubble
+    HEAD_RADII = (9, 6, 4)  # cluster of 3 bubbles at the head
+    HEAD_OFFSETS = (  # (dx, dy) offsets from centre for each head bubble
         (0, 0),
         (6, -5),
         (-5, 5),
-    ]
+    )
     FRAME_SPEED = 2.5  # head wobble speed (radians/sec)
 
     def __init__(self, origin_x, origin_y, facing):
@@ -268,13 +270,12 @@ def run():
 
         keys = pygame.key.get_pressed()
         now = pygame.time.get_ticks()
-        if keys[pygame.K_z]:
-            if now - last_fire_time >= RAPID_FIRE_INTERVAL:
-                facing = player.get_facing()
-                cx, cy = player.rect.center
-                projectiles.append(BubbleBeamProjectile(cx, cy, facing))
-                hud.record_shot()
-                last_fire_time = now
+        if keys[pygame.K_z] and now - last_fire_time >= RAPID_FIRE_INTERVAL:
+            facing = player.get_facing()
+            cx, cy = player.rect.center
+            projectiles.append(BubbleBeamProjectile(cx, cy, facing))
+            hud.record_shot()
+            last_fire_time = now
 
         for event in events:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_z:

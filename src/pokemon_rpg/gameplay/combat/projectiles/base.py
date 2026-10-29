@@ -142,7 +142,6 @@ class BaseProjectile(pygame.sprite.Sprite):
 
     def update_effects(self, dt):
         """Advance particles/trails. Called every frame, active or not."""
-        pass
 
     def has_effects(self):
         """True while visual effects are still playing after deactivation."""
@@ -150,11 +149,9 @@ class BaseProjectile(pygame.sprite.Sprite):
 
     def on_deactivate(self):
         """Called once when the projectile stops (hit, wall, range or map edge)."""
-        pass
 
     def on_collision(self):
         """Override this in subclasses for explosion animations or sounds."""
-        pass
 
     def on_hit(self, target):
         """Called when the projectile hits a combat sprite. Override to deal damage."""
