@@ -6,7 +6,6 @@ from pokemon_rpg.rendering.transition import FadeTransition
 from pokemon_rpg.settings import HEIGHT, WIDTH
 from pokemon_rpg.world.level import Level
 
-
 GAME_OVER_OVERLAY = (0, 0, 0, 160)
 START_MAP = "vertia_city"
 START_POS = (500, 500)
@@ -69,9 +68,12 @@ class Game:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                if self.game_over and event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_r:
-                        self._restart()
+                if (
+                    self.game_over
+                    and event.type == pygame.KEYDOWN
+                    and event.key == pygame.K_r
+                ):
+                    self._restart()
 
             dt = self.clock.tick(60) / 1000
 

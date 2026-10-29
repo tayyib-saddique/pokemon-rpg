@@ -9,13 +9,12 @@ from pokemon_rpg.rendering.hud import HUD
 from pokemon_rpg.resources.map_repository import load_map
 from pokemon_rpg.settings import SCALE
 from pokemon_rpg.world.map_builder import (
-    flatten_layers,
+    build_sprites,
     collect_base_positions,
     collect_building_foot_depths,
-    build_sprites,
+    flatten_layers,
 )
 from pokemon_rpg.world.navigation import NavGrid
-
 
 FILL_COLOUR = (60, 55, 65)
 

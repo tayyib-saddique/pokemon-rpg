@@ -20,12 +20,12 @@ class Volley(BaseProjectile):
     def __init__(self, origin_x, origin_y, facing, **kwargs):
         super().__init__(origin_x, origin_y, facing, **kwargs)
 
-        self._shot_kwargs = dict(
-            map_size=(self.map_width, self.map_height),
-            max_range=self.max_range,
-            collision_sprites=self.collision_sprites,
-            combat_sprites=self.combat_sprites,
-        )
+        self._shot_kwargs = {
+            "map_size": (self.map_width, self.map_height),
+            "max_range": self.max_range,
+            "collision_sprites": self.collision_sprites,
+            "combat_sprites": self.combat_sprites,
+        }
         self.shots: list[BaseProjectile] = []
         self._fired = 0
         # Primed so the first shot leaves on the first frame

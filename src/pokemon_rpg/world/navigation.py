@@ -1,17 +1,18 @@
-from typing import List, Tuple, Any
+from typing import Any
+
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
 from pokemon_rpg.world.matrix import build_collision_matrix
 
-WorldPos = Tuple[float, float]
-GridPos = Tuple[int, int]
+WorldPos = tuple[float, float]
+GridPos = tuple[int, int]
 
 
 class NavGrid:
     def __init__(
         self,
-        collision_sprites: List[Any],
+        collision_sprites: list[Any],
         map_width: int,
         map_height: int,
         tile_size: int,
@@ -49,9 +50,9 @@ class NavGrid:
             for dy in range(-radius, radius + 1):
                 for dx in range(-radius, radius + 1):
                     nx, ny = gx + dx, gy + dy
-                    if 0 <= nx < self.cols and 0 <= ny < self.rows:
-                        if grid[ny][nx] == 1:
-                            return nx, ny
+                    in_bounds = 0 <= nx < self.cols and 0 <= ny < self.rows
+                    if in_bounds and grid[ny][nx] == 1:
+                        return nx, ny
 
         return gx, gy  # fallback
 

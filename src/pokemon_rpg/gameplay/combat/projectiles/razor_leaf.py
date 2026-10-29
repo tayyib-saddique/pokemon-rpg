@@ -218,7 +218,7 @@ class SlashMark:
     """Pixel cut that flashes across a target the leaf struck."""
 
     # Screen-space line directions a pixel slash can take
-    DIRECTIONS = [(1, 0), (1, 1), (0, 1), (-1, 1)]
+    DIRECTIONS = ((1, 0), (1, 1), (0, 1), (-1, 1))
 
     def __init__(self, x, y, dir_angle):
         self.x, self.y = x, y

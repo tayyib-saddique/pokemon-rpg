@@ -86,8 +86,8 @@ class BubbleBeam(BaseProjectile):
     BUBBLES_PER_EMIT = 2
     FREEZE_DURATION = 0.14
 
-    HEAD_RADII = [9, 6]
-    HEAD_OFFSETS = [(0, 0), (-3, 3)]
+    HEAD_RADII = (9, 6)
+    HEAD_OFFSETS = ((0, 0), (-3, 3))
 
     def __init__(self, origin_x, origin_y, facing, **kwargs):
         super().__init__(origin_x, origin_y, facing, speed=340, **kwargs)

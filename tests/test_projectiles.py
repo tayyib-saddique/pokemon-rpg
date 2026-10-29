@@ -2,8 +2,8 @@ import pygame
 import pytest
 
 from pokemon_rpg.gameplay.combat.projectiles.base import (
-    BaseProjectile,
     FACING_VELOCITY,
+    BaseProjectile,
 )
 from pokemon_rpg.gameplay.direction import direction_name
 
@@ -218,7 +218,7 @@ def test_flamethrower_emission_is_frame_rate_independent():
         bursts = 0
         original = flame._burst
 
-        def counting_burst():
+        def counting_burst(original=original):
             nonlocal bursts
             bursts += 1
             original()

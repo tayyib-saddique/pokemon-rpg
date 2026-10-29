@@ -135,13 +135,13 @@ class Ember(BaseProjectile):
     BURST_COUNT = 16
     FREEZE_DURATION = 0.08
 
-    HEAD_SHARDS = [
+    HEAD_SHARDS = (
         (0, 13, 5, 0.0),
         (4, 9, 4, 1.2),
         (-4, 9, 4, 2.4),
         (2, 6, 3, 0.8),
         (-2, 6, 3, 3.2),
-    ]
+    )
 
     def __init__(self, origin_x, origin_y, facing, **kwargs):
         super().__init__(origin_x, origin_y, facing, speed=460, **kwargs)
